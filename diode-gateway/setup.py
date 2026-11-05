@@ -16,7 +16,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "kartika=run_dev:main",
+            "kartika=cli:main",
         ],
     },
     python_requires=">=3.10",

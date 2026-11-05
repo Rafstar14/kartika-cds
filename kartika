@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# KARTIKA-CDS: Perintah terminal instan 'kartika' untuk Linux / macOS
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TARGET="$DIR/diode-gateway"
+if [ ! -d "$TARGET" ]; then
+    TARGET="$DIR"
+fi
+
+echo "================================================================="
+echo " KARTIKA-CDS: Meluncurkan Gerbang Keamanan Satu Arah..."
+echo "================================================================="
+
+# Buka browser otomatis
+(sleep 2 && (xdg-open "http://127.0.0.1:8000/split.html" 2>/dev/null || open "http://127.0.0.1:8000/split.html" 2>/dev/null)) &
+
+# Jalankan server
+python3 "$TARGET/run_dev.py" "$@"

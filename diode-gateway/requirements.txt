@@ -1,0 +1,6 @@
+Flask>=3.0
+cryptography>=41.0
+yara-python>=4.5
+pyclamd>=0.4.0
+python-magic>=0.4.27   # opsional (butuh libmagic1); dipakai sebagai pemeriksaan kedua
+pytest>=8.0            # untuk pengujian otomatis

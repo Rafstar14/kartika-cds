@@ -1,0 +1,9 @@
+diode.key
+keys/
+data/
+run/
+demo_files/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

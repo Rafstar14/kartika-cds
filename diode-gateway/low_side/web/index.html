@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="id" data-side="low">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KARTIKA-CDS: Pos Pemeriksaan (Low-Side Security Gateway)</title>
+  <link rel="stylesheet" href="/static/diode.css">
+</head>
+<body>
+<div class="app-container">
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand-badge">
+      <div class="brand-logo-shield">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+        </svg>
+      </div>
+      <div class="brand-title">
+        <h1>KARTIKA-CDS</h1>
+        <span>One-Way Security Gateway</span>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li class="nav-item active">
+        <a href="#beranda" id="nav-beranda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Beranda
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#riwayat" id="nav-riwayat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="12 8 12 12 14 14"/>
+            <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/>
+          </svg>
+          Riwayat
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#pengaturan" id="nav-pengaturan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Pengaturan
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#bantuan" id="nav-bantuan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Bantuan
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-status-box">
+      <div class="status-beacon"></div>
+      <div class="status-info-side">
+        <div class="title">Status Sistem</div>
+        <div class="val" id="sb-status">Normal</div>
+        <div class="time" id="sb-time">--:--:--</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-wrapper">
+    <!-- Top Navigation Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title-text">
+          <h2>Gerbang Keamanan Satu Arah</h2>
+          <span class="topbar-subtitle">Melindungi Jaringan Radar Terisolasi</span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="pill-badge normal" id="top-status-badge">
+          <span class="status-beacon"></span>
+          <span id="top-status-text">Normal</span>
+        </div>
+        <div class="pill-badge clock" id="top-clock">--:--:--</div>
+        <div class="user-avatar" title="Operator Kartika">AS</div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="content-body">
+      <!-- Hero Banner & Radar Visual -->
+      <section class="hero-radar-card">
+        <div class="hero-left-content">
+          <div class="hero-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            KARTIKA-CDS • Inspect. Verify. Protect.
+          </div>
+          <h1 class="hero-title">Gerbang Keamanan Satu Arah untuk Melindungi Jaringan Radar</h1>
+          <p class="hero-desc">Pastikan setiap berkas operasi, konfigurasi parameter radar, dan pembaruan firmware aman sebelum masuk ke dalam sistem terisolasi.</p>
+          <a href="#dropzone" class="btn-action-primary" id="btn-start-check">
+            Mulai Pemeriksaan
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+
+        <div class="radar-graphic-frame">
+          <div class="radar-scope">
+            <div class="radar-crosshair-h"></div>
+            <div class="radar-crosshair-v"></div>
+            <div class="radar-sweep-beam"></div>
+          </div>
+          <!-- Dish SVG Siluet -->
+          <svg class="radar-dish-svg" width="130" height="130" viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="1.2">
+            <path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- System Telemetry & Metrics Row -->
+      <section>
+        <div class="section-bar">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            Ringkasan Sistem & Status Radar
+          </h3>
+          <a class="link-action" href="#riwayat">Lihat Detail &rarr;</a>
+        </div>
+
+        <div class="stats-cards-row">
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <rect x="9" y="9" width="6" height="6"/>
+                <line x1="9" y1="1" x2="9" y2="4"/>
+                <line x1="15" y1="1" x2="15" y2="4"/>
+                <line x1="9" y1="20" x2="9" y2="23"/>
+                <line x1="15" y1="20" x2="15" y2="23"/>
+              </svg>
+            </div>
+            <div class="stat-metric-val" id="metric-fw">v2.4.0</div>
+            <div class="stat-metric-label">Versi Firmware</div>
+          </div>
+
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4.93 4.93a10 10 0 0 1 14.14 0"/>
+                <path d="M7.76 7.76a6 6 0 0 1 8.48 0"/>
+                <circle cx="12" cy="12" r="2"/>
+                <path d="M12 14v7"/>
+              </svg>
+            </div>
+            <div class="stat-metric-val" id="metric-freq">2920 MHz</div>
+            <div class="stat-metric-label">Frekuensi Sapuan</div>
+          </div>
+
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div class="stat-metric-val" id="metric-lock" style="color:var(--accent-emerald);">AKTIF</div>
+            <div class="stat-metric-label">Interlock Hardware Diode</div>
+          </div>
+
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="stat-metric-val" id="metric-processed">0</div>
+            <div class="stat-metric-label">Total File Diproses</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard Interactive Grid: Dropzone & Inspection Stages -->
+      <section class="dashboard-grid" id="dropzone">
+        <!-- Left: Upload & Transfer Flow -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="section-bar">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Serahkan File / Patch OT Radar
+            </h3>
+          </div>
+
+          <label class="dropzone-container" id="drop">
+            <input type="file" id="file" multiple>
+            <div class="dropzone-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 16l-4-4-4 4M12 12v9M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+              </svg>
+            </div>
+            <div class="dropzone-title">Seret file ke sini</div>
+            <div class="dropzone-sub">atau klik untuk memilih file dari komputer</div>
+            <div class="btn-file-select">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              Pilih File
+            </div>
+            <div class="dropzone-notice">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              File akan diperiksa melalui 6 tahapan keamanan sebelum diteruskan ke jaringan radar.
+            </div>
+          </label>
+          <div id="err" class="err-msg"></div>
+
+          <!-- Flow Stepper -->
+          <div class="flow-stepper" id="flow-stepper">
+            <div class="step-node active" id="step-upload">
+              <div class="step-icon-circle">1</div>
+              <div class="step-label">Upload</div>
+            </div>
+            <div class="step-arrow-divider"></div>
+
+            <div class="step-node" id="step-scan">
+              <div class="step-icon-circle">2</div>
+              <div class="step-label">Scan</div>
+            </div>
+            <div class="step-arrow-divider"></div>
+
+            <div class="step-node" id="step-analisis">
+              <div class="step-icon-circle">3</div>
+              <div class="step-label">Analisis</div>
+            </div>
+            <div class="step-arrow-divider"></div>
+
+            <div class="step-node" id="step-validasi">
+              <div class="step-icon-circle">4</div>
+              <div class="step-label">Validasi</div>
+            </div>
+            <div class="step-arrow-divider"></div>
+
+            <div class="step-node" id="step-enkripsi">
+              <div class="step-icon-circle">5</div>
+              <div class="step-label">Enkripsi</div>
+            </div>
+            <div class="step-arrow-divider"></div>
+
+            <div class="step-node" id="step-transfer">
+              <div class="step-icon-circle">6</div>
+              <div class="step-label">Transfer</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Real-Time 6-Stage Inspection Engine Checklist -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="section-bar">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              Proses Pemeriksaan (6 Tahap)
+            </h3>
+            <span class="pill-badge" id="inspection-filename">Menunggu file...</span>
+          </div>
+
+          <div class="inspection-box">
+            <ul class="stage-list" id="inspection-stages-list">
+              <li class="stage-item" id="stage-name-size">
+                <div class="stage-label-group">
+                  <div class="stage-bullet">&#10003;</div>
+                  <div class="stage-title">Nama &amp; ukuran</div>
+                </div>
+                <div class="stage-status-text">Siap</div>
+              </li>
+              <li class="stage-item" id="stage-sha256">
+                <div class="stage-label-group">
+                  <div class="stage-bullet">&#10003;</div>
+                  <div class="stage-title">SHA-256</div>
+                </div>
+                <div class="stage-status-text">Siap</div>
+              </li>
+              <li class="stage-item" id="stage-magic">
+                <div class="stage-label-group">
+                  <div class="stage-bullet">&#10003;</div>
+                  <div class="stage-title">Tanda tangan file</div>
+                </div>
+                <div class="stage-status-text">Siap</div>
+              </li>
+              <li class="stage-item" id="stage-structure">
+                <div class="stage-label-group">
+                  <div class="stage-bullet">&#10003;</div>
+                  <div class="stage-title">Struktur</div>
+                </div>
+                <div class="stage-status-text">Siap</div>
+              </li>
+              <li class="stage-item" id="stage-yara">
+                <div class="stage-label-group">
+                  <div class="stage-bullet">&#10003;</div>
+                  <div class="stage-title">YARA</div>
+                </div>
+                <div class="stage-status-text">Siap</div>
+              </li>
+              <li class="stage-item" id="stage-clamav">
+                <div class="stage-label-group">
+                  <div class="stage-bullet">&#10003;</div>
+                  <div class="stage-title">ClamAV</div>
+                </div>
+                <div class="stage-status-text">Siap</div>
+              </li>
+            </ul>
+
+            <div class="verdict-banner" id="verdict-banner">
+              <div class="verdict-icon">&#10003;</div>
+              <div class="verdict-text">
+                <h4 id="verdict-title">Sistem Siap Menerima File</h4>
+                <p id="verdict-sub">Jalur Balik 0-Byte: Berkas lolos akan diteruskan ke Enklave Radar via UDP Simplex.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Log & Audit Records -->
+      <section id="riwayat">
+        <div class="section-bar">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Log Terbaru &amp; Audit Trail
+          </h3>
+          <span class="pill-badge normal" id="chain-badge">Rantai Hash Terverifikasi</span>
+        </div>
+
+        <div class="table-panel-card">
+          <div class="table-responsive">
+            <table class="tactical-table">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Nama File</th>
+                  <th>Hasil</th>
+                  <th>Alasan / Status Pengiriman</th>
+                </tr>
+              </thead>
+              <tbody id="log-table-body">
+                <tr>
+                  <td colspan="4" class="empty-state">Memuat data log audit...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

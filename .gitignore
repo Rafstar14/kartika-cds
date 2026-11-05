@@ -1,0 +1,29 @@
+# Environments and virtualenvs
+.venv/
+env/
+venv/
+ENV/
+
+# Byte-compiled / optimized / test caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Keys and sensitive security credentials (NEVER COMMIT)
+*.key
+keys/
+*.priv
+
+# Temporary and runtime states
+data/
+run/
+*.upload
+*.quarantined
+*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

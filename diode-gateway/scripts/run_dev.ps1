@@ -7,4 +7,4 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BaseDir = Split-Path -Parent $ScriptDir
 Set-Location $BaseDir
 
-& "C:\Users\Hype\AppData\Local\Python\bin\python.exe" run_dev.py
+python run_dev.py

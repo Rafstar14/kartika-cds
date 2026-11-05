@@ -178,22 +178,62 @@ File demo akan tersimpan di folder `demo_files/` berisi:
 
 ## Menjalankan Sistem
 
-### Mode Pengembangan / Demo (Localhost)
+### ⚡ Cara Tercepat: Perintah Instan `kartika`
 
-```bash
-python run_dev.py
+Setelah instalasi selesai, cukup ketik **satu perintah** di terminal dari folder mana saja:
+
+**Windows (Command Prompt / PowerShell):**
+```cmd
+kartika
 ```
 
-Sistem akan menyalakan 4 layanan sekaligus:
+**Linux / macOS:**
+```bash
+./kartika
+```
+
+**Atau jika sudah install via pip:**
+```bash
+kartika
+```
+
+Menu interaktif berikut akan langsung muncul di terminal:
+
+```
+======================================================================
+Choose Interface (v2.0-Hardened)
+🚀 Server: http://127.0.0.1:8000 (Stopped)
+======================================================================
+
+ > Web UI (Open in Browser)
+   Terminal UI (Interactive CLI)
+   Run Live Smoke Test
+   FEC Loss Simulation
+   Check Gateway Status
+   Stop Gateway Services
+   Exit
+```
+
+Navigasikan pilihan menggunakan **tombol panah atas/bawah** pada keyboard, lalu tekan **Enter** untuk memilih:
+
+| Pilihan Menu | Fungsi |
+|---|---|
+| **Web UI (Open in Browser)** | Menyalakan gateway di latar belakang & otomatis membuka split-view di browser |
+| **Terminal UI (Interactive CLI)** | Pemantauan status radar OT, brankas file, dan port secara real-time di terminal |
+| **Run Live Smoke Test** | Pengujian otomatis 8 skenario serangan & file sah TNI AD |
+| **FEC Loss Simulation** | Simulasi ketahanan paket loss dengan Reed-Solomon RS(4,2) |
+| **Check Gateway Status** | Pemeriksaan kesehatan port (5000, 5001, 8000, 9999) & kunci kriptografi |
+| **Stop Gateway Services** | Menghentikan semua proses server di latar belakang |
+| **Exit** | Keluar dari launcher |
+
+Setelah memilih **Web UI**, browser Anda akan otomatis terbuka ke:
 
 | Layanan | URL | Fungsi |
 |---|---|---|
+| **Split-View Observer** | http://127.0.0.1:8000/split.html | Tampilan berdampingan kedua sisi untuk demo / presentasi juri |
 | **Sisi Luar (Low-Side)** | http://127.0.0.1:5000 | Dashboard upload, dropzone, dan pemeriksaan 6 tahap |
 | **Sisi Dalam (High-Side)** | http://127.0.0.1:5001 | Brankas file terverifikasi, telemetri radar OT, dan audit log |
-| **Split-View Observer** | http://127.0.0.1:8000/split.html | Tampilan berdampingan kedua sisi untuk demo / presentasi juri |
 | **UDP Simplex Gateway** | 127.0.0.1:9999 | Transfer data satu arah (0-byte back-channel) |
-
-Setelah server aktif, buka browser dan akses salah satu URL di atas.
 
 ### Mode Diode Penuh (Linux dengan Network Namespaces)
 

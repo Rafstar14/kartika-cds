@@ -18,10 +18,143 @@
   setInterval(updateClock, 1000);
   updateClock();
 
-  // Navigation click handles
-  document.querySelectorAll(".nav-item a").forEach((a) => {
+  // Toast Notification Helper
+  function showToast(msg) {
+    const toast = $("#toast-notice");
+    const toastText = $("#toast-text");
+    if (toast && toastText) {
+      toastText.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+  }
+
+  // Audio Beep Synthesizer via Web Audio API (Zero External Asset Dependency)
+  function playBeep(success = true) {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      if (success) {
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } else {
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+        osc.frequency.setValueAtTime(164.81, audioCtx.currentTime + 0.12); // E3
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      }
+    } catch (e) {}
+  }
+
+  // =========================================================================
+  // MODAL CONTROLLERS (PENGATURAN & BANTUAN)
+  // =========================================================================
+  const modalSettings = $("#modal-pengaturan");
+  const modalHelp = $("#modal-bantuan");
+
+  const navPengaturan = $("#nav-pengaturan");
+  const navBantuan = $("#nav-bantuan");
+  const btnCloseSettings = $("#btn-close-settings");
+  const btnSaveSettings = $("#btn-save-settings");
+  const btnResetSettings = $("#btn-reset-settings");
+
+  const btnCloseHelp = $("#btn-close-help");
+  const btnCloseHelpFooter = $("#btn-close-help-footer");
+
+  // Open Settings Modal
+  if (navPengaturan && modalSettings) {
+    navPengaturan.addEventListener("click", (e) => {
+      e.preventDefault();
+      modalSettings.classList.add("active");
+    });
+  }
+
+  // Close Settings Modal
+  function closeSettings() {
+    if (modalSettings) modalSettings.classList.remove("active");
+  }
+  if (btnCloseSettings) btnCloseSettings.addEventListener("click", closeSettings);
+
+  // Save Settings
+  if (btnSaveSettings) {
+    btnSaveSettings.addEventListener("click", () => {
+      const cfg = {
+        udp: $("#set-udp-active")?.checked ?? true,
+        fec: $("#set-fec-active")?.checked ?? true,
+        magic: $("#set-magic-check")?.checked ?? true,
+        yara: $("#set-yara-check")?.checked ?? true,
+        clamav: $("#set-clamav-check")?.checked ?? true,
+        sound: $("#set-sound-alert")?.checked ?? true,
+      };
+      try {
+        localStorage.setItem("kartika_cds_cfg", JSON.stringify(cfg));
+      } catch (e) {}
+      showToast("Pengaturan KARTIKA-CDS berhasil disimpan!");
+      closeSettings();
+    });
+  }
+
+  // Reset to TNI AD Defaults
+  if (btnResetSettings) {
+    btnResetSettings.addEventListener("click", () => {
+      ["set-udp-active", "set-fec-active", "set-magic-check", "set-yara-check", "set-clamav-check", "set-sound-alert"].forEach(id => {
+        const el = $(`#${id}`);
+        if (el) el.checked = true;
+      });
+      showToast("Pengaturan dikembalikan ke Standar Militer TNI AD.");
+    });
+  }
+
+  // Open Help Modal
+  if (navBantuan && modalHelp) {
+    navBantuan.addEventListener("click", (e) => {
+      e.preventDefault();
+      modalHelp.classList.add("active");
+    });
+  }
+
+  // Close Help Modal
+  function closeHelp() {
+    if (modalHelp) modalHelp.classList.remove("active");
+  }
+  if (btnCloseHelp) btnCloseHelp.addEventListener("click", closeHelp);
+  if (btnCloseHelpFooter) btnCloseHelpFooter.addEventListener("click", closeHelp);
+
+  // Close modals when clicking backdrop
+  [modalSettings, modalHelp].forEach((m) => {
+    if (m) {
+      m.addEventListener("click", (e) => {
+        if (e.target === m) m.classList.remove("active");
+      });
+    }
+  });
+
+  // ESC key to close modal
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeSettings();
+      closeHelp();
+    }
+  });
+
+  // Standard Navigation tabs
+  document.querySelectorAll(".nav-menu .nav-item a").forEach((a) => {
     a.addEventListener("click", (e) => {
-      document.querySelectorAll(".nav-item").forEach((el) => el.classList.remove("active"));
+      if (a.id === "nav-pengaturan" || a.id === "nav-bantuan") {
+        return; // Handled by modals above
+      }
+      document.querySelectorAll(".nav-menu .nav-item").forEach((el) => el.classList.remove("active"));
       a.closest(".nav-item").classList.add("active");
     });
   });
@@ -80,18 +213,22 @@
       });
     }
 
+    const soundEnabled = $("#set-sound-alert") ? $("#set-sound-alert").checked : true;
+
     if (job.verdict === "ACCEPTED") {
       vBanner.className = "verdict-banner";
       vBanner.querySelector(".verdict-icon").innerHTML = "&#10003;";
       vTitle.textContent = "File Aman & Lolos Verifikasi";
       vSub.textContent = "Diteruskan ke Enklave Radar via UDP Simplex (Reed-Solomon RS(4,2) Protected).";
       updateStepper(5); // Completed transfer
+      if (soundEnabled) playBeep(true);
     } else {
       vBanner.className = "verdict-banner fail";
       vBanner.querySelector(".verdict-icon").innerHTML = "&times;";
       vTitle.textContent = "File Ditolak & Dikarantina";
       vSub.textContent = job.reason ? `Alasan: ${job.reason}` : "Pelanggaran keamanan terdeteksi. Berkas tidak dikirim.";
       updateStepper(2); // Stop at inspection
+      if (soundEnabled) playBeep(false);
     }
   }
 
@@ -186,7 +323,6 @@
           return;
         }
 
-        // Merge or prioritize audit logs
         const tableRows = [];
         const seenEvents = audit.records.slice().reverse().slice(0, 15);
 

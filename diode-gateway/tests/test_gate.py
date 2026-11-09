@@ -59,7 +59,11 @@ def test_symlink_in_dropzone_rejected(tmp_path):
     target = tmp_path / "real.txt"
     target.write_bytes(b"halo")
     link = tmp_path / "link.upload"
-    link.symlink_to(target)
+    try:
+        link.symlink_to(target)
+    except OSError:
+        import pytest
+        pytest.skip("Symlink creation requires elevated privileges on Windows")
     r = gate(required=set()).inspect(link, "real.txt")
     assert (r.verdict, r.code) == ("REJECTED", "UNSAFE_INODE")
 

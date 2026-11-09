@@ -12,8 +12,9 @@
   <aside class="sidebar">
     <div class="brand-badge">
       <div class="brand-logo-shield">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z"/>
+          <polyline points="9 12 11 14 15 10"/>
         </svg>
       </div>
       <div class="brand-title">
@@ -42,7 +43,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="#pengaturan" id="nav-pengaturan">
+        <a href="javascript:void(0)" id="nav-pengaturan">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -51,7 +52,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="#bantuan" id="nav-bantuan">
+        <a href="javascript:void(0)" id="nav-bantuan">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="10"/>
             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
@@ -65,7 +66,7 @@
     <div class="sidebar-status-box">
       <div class="status-beacon"></div>
       <div class="status-info-side">
-        <div class="title">Status Sistem</div>
+        <div class="title">Status Gateway</div>
         <div class="val" id="sb-status">Normal</div>
         <div class="time" id="sb-time">--:--:--</div>
       </div>
@@ -86,7 +87,7 @@
       <div class="topbar-right">
         <div class="pill-badge normal" id="top-status-badge">
           <span class="status-beacon"></span>
-          <span id="top-status-text">Normal</span>
+          <span id="top-status-text">Normal (Siap)</span>
         </div>
         <div class="pill-badge clock" id="top-clock">--:--:--</div>
         <div class="user-avatar" title="Operator Kartika">AS</div>
@@ -96,16 +97,16 @@
     <!-- Page Content -->
     <div class="content-body">
       <!-- Hero Banner & Radar Visual -->
-      <section class="hero-radar-card">
+      <section class="hero-radar-card" id="beranda">
         <div class="hero-left-content">
           <div class="hero-tag">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
             KARTIKA-CDS • Inspect. Verify. Protect.
           </div>
           <h1 class="hero-title">Gerbang Keamanan Satu Arah untuk Melindungi Jaringan Radar</h1>
-          <p class="hero-desc">Pastikan setiap berkas operasi, konfigurasi parameter radar, dan pembaruan firmware aman sebelum masuk ke dalam sistem terisolasi.</p>
+          <p class="hero-desc">Pastikan setiap berkas operasi, konfigurasi parameter radar, dan pembaruan firmware aman melalui 6 tahapan inspeksi militer sebelum dikirim ke sistem radar terisolasi.</p>
           <a href="#dropzone" class="btn-action-primary" id="btn-start-check">
             Mulai Pemeriksaan
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -121,8 +122,7 @@
             <div class="radar-crosshair-v"></div>
             <div class="radar-sweep-beam"></div>
           </div>
-          <!-- Dish SVG Siluet -->
-          <svg class="radar-dish-svg" width="130" height="130" viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="1.2">
+          <svg class="radar-dish-svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="1.4">
             <path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
           </svg>
         </div>
@@ -137,7 +137,7 @@
               <line x1="8" y1="21" x2="16" y2="21"/>
               <line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
-            Ringkasan Sistem & Status Radar
+            Ringkasan Sistem &amp; Status Radar
           </h3>
           <a class="link-action" href="#riwayat">Lihat Detail &rarr;</a>
         </div>
@@ -155,7 +155,7 @@
               </svg>
             </div>
             <div class="stat-metric-val" id="metric-fw">v2.4.0</div>
-            <div class="stat-metric-label">Versi Firmware</div>
+            <div class="stat-metric-label">Versi Firmware Radar</div>
           </div>
 
           <div class="stat-metric-card">
@@ -168,7 +168,7 @@
               </svg>
             </div>
             <div class="stat-metric-val" id="metric-freq">2920 MHz</div>
-            <div class="stat-metric-label">Frekuensi Sapuan</div>
+            <div class="stat-metric-label">Frekuensi Sapuan Radar</div>
           </div>
 
           <div class="stat-metric-card">
@@ -178,7 +178,7 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="metric-lock" style="color:var(--accent-emerald);">AKTIF</div>
+            <div class="stat-metric-val" id="metric-lock" style="color:var(--accent-emerald-dark);">AKTIF</div>
             <div class="stat-metric-label">Interlock Hardware Diode</div>
           </div>
 
@@ -217,15 +217,15 @@
                 <path d="M16 16l-4-4-4 4M12 12v9M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
               </svg>
             </div>
-            <div class="dropzone-title">Seret file ke sini</div>
-            <div class="dropzone-sub">atau klik untuk memilih file dari komputer</div>
+            <div class="dropzone-title">Seret berkas ke area ini</div>
+            <div class="dropzone-sub">atau klik tombol di bawah untuk memilih file</div>
             <div class="btn-file-select">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
               </svg>
-              Pilih File
+              Pilih Berkas
             </div>
             <div class="dropzone-notice">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -233,7 +233,7 @@
                 <line x1="12" y1="16" x2="12" y2="12"/>
                 <line x1="12" y1="8" x2="12.01" y2="8"/>
               </svg>
-              File akan diperiksa melalui 6 tahapan keamanan sebelum diteruskan ke jaringan radar.
+              Berkas akan diverifikasi melalui 6 tahapan keamanan militer sebelum diteruskan.
             </div>
           </label>
           <div id="err" class="err-msg"></div>
@@ -301,35 +301,35 @@
               <li class="stage-item" id="stage-sha256">
                 <div class="stage-label-group">
                   <div class="stage-bullet">&#10003;</div>
-                  <div class="stage-title">SHA-256</div>
+                  <div class="stage-title">SHA-256 Integritas</div>
                 </div>
                 <div class="stage-status-text">Siap</div>
               </li>
               <li class="stage-item" id="stage-magic">
                 <div class="stage-label-group">
                   <div class="stage-bullet">&#10003;</div>
-                  <div class="stage-title">Tanda tangan file</div>
+                  <div class="stage-title">Tanda tangan file (Magic)</div>
                 </div>
                 <div class="stage-status-text">Siap</div>
               </li>
               <li class="stage-item" id="stage-structure">
                 <div class="stage-label-group">
                   <div class="stage-bullet">&#10003;</div>
-                  <div class="stage-title">Struktur</div>
+                  <div class="stage-title">Struktur data biner</div>
                 </div>
                 <div class="stage-status-text">Siap</div>
               </li>
               <li class="stage-item" id="stage-yara">
                 <div class="stage-label-group">
                   <div class="stage-bullet">&#10003;</div>
-                  <div class="stage-title">YARA</div>
+                  <div class="stage-title">Aturan YARA Radar</div>
                 </div>
                 <div class="stage-status-text">Siap</div>
               </li>
               <li class="stage-item" id="stage-clamav">
                 <div class="stage-label-group">
                   <div class="stage-bullet">&#10003;</div>
-                  <div class="stage-title">ClamAV</div>
+                  <div class="stage-title">Pemindaian ClamAV</div>
                 </div>
                 <div class="stage-status-text">Siap</div>
               </li>
@@ -384,6 +384,221 @@
       </section>
     </div>
   </main>
+</div>
+
+<!-- =========================================================================
+     MODAL PENGATURAN (SETTINGS) - FIGMA / CANVA STYLE
+     ========================================================================= -->
+<div class="modal-overlay" id="modal-pengaturan">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Pengaturan Sistem KARTIKA-CDS</h3>
+          <span>Konfigurasi Jaringan &amp; Kebijakan Keamanan Pos Pemeriksaan</span>
+        </div>
+      </div>
+      <button type="button" class="btn-close-modal" id="btn-close-settings">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div>
+        <div class="modal-section-title">Konfigurasi Jaringan &amp; Port Diode</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4>Jalur Simplex UDP (One-Way Diode)</h4>
+              <p>Port pengiriman satu arah ke High-Side Enclave (127.0.0.1:5005)</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="set-udp-active">
+              <span class="slider-round"></span>
+            </label>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4>Koreksi Kesalahan Reed-Solomon RS(4,2)</h4>
+              <p>Menjamin keutuhan paket data tanpa membutuhkan sinyal ACK balik</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="set-fec-active">
+              <span class="slider-round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="modal-section-title">Kebijakan Inspeksi Berkas (Security Policies)</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4>Pemeriksaan Ketat Magic Bytes</h4>
+              <p>Memverifikasi header &amp; footer biner asli untuk mencegah pemalsuan ekstensi</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="set-magic-check">
+              <span class="slider-round"></span>
+            </label>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4>Aturan YARA Intelijen Siber Radar</h4>
+              <p>Mendeteksi kode berbahaya dan anomali patch firmware militer</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="set-yara-check">
+              <span class="slider-round"></span>
+            </label>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4>Pemindaian Mendalam ClamAV Antivirus</h4>
+              <p>Mencocokkan tanda tangan database virus &amp; trojan terkini</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="set-clamav-check">
+              <span class="slider-round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="modal-section-title">Preferensi &amp; Notifikasi Operator</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4>Peringatan Suara (Audio Alert)</h4>
+              <p>Bunyi notifikasi saat berkas berhasil ditransfer atau ditolak</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="set-sound-alert">
+              <span class="slider-round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" id="btn-reset-settings">Standar TNI AD</button>
+      <button type="button" class="btn-primary" id="btn-save-settings">Simpan Pengaturan</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MODAL BANTUAN (HELP & DOCUMENTATION) - FIGMA / CANVA STYLE
+     ========================================================================= -->
+<div class="modal-overlay" id="modal-bantuan">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Bantuan &amp; Panduan Operasional</h3>
+          <span>SOP Pengiriman Berkas Gerbang Keamanan Satu Arah</span>
+        </div>
+      </div>
+      <button type="button" class="btn-close-modal" id="btn-close-help">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div>
+        <div class="modal-section-title">Alur Kerja Pengiriman Berkas (SOP)</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="help-step-box">
+            <div class="help-step-num">1</div>
+            <div class="help-step-content">
+              <h4>Siapkan Berkas Terverifikasi</h4>
+              <p>Pastikan berkas yang akan dikirim berupa patch firmware (.bin, .fw), konfigurasi radar (.json, .xml, .ini), atau berkas log resmi.</p>
+            </div>
+          </div>
+
+          <div class="help-step-box">
+            <div class="help-step-num">2</div>
+            <div class="help-step-content">
+              <h4>Serahkan ke Pos Pemeriksaan (Dropzone)</h4>
+              <p>Tarik dan lepas file ke kotak dropzone atau klik tombol "Pilih Berkas". Berkas otomatis masuk ke pipeline verifikasi.</p>
+            </div>
+          </div>
+
+          <div class="help-step-box">
+            <div class="help-step-num">3</div>
+            <div class="help-step-content">
+              <h4>Proses Inspeksi 6 Tahap Otomatis</h4>
+              <p>Sistem memverifikasi integritas nama, SHA-256, magic bytes biner, struktur data, aturan YARA, dan ClamAV.</p>
+            </div>
+          </div>
+
+          <div class="help-step-box">
+            <div class="help-step-num">4</div>
+            <div class="help-step-content">
+              <h4>Emisi Simplex Satu Arah ke Enklave Radar</h4>
+              <p>Berkas lolos dienkripsi ChaCha20-Poly1305 dan dipancarkan ke High-Side via UDP Simplex (0-byte feedback), dijamin tidak ada data yang bisa bocor keluar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="modal-section-title">Arti Kode &amp; Status Visual</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4><span class="badge-status pass">LOLOS</span> Berkas Aman</h4>
+              <p>Semua tahapan lolos. Berkas tersimpan di Brankas Enklave Radar.</p>
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-info">
+              <h4><span class="badge-status fail">DITOLAK</span> Berkas Dikarantina</h4>
+              <p>Terdeteksi ancaman atau format tidak standar. Berkas diisolasi dan dicatat di log audit.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="modal-section-title">Kontak Dukungan Teknis Militer</div>
+        <div class="help-step-box">
+          <div class="help-step-num" style="background:var(--accent-emerald); color:#FFFFFF;">&#9742;</div>
+          <div class="help-step-content">
+            <h4>Pusat Komando Satuan Siber TNI AD</h4>
+            <p>Saluran Komunikasi Radio Sandi: <strong>CH-07 (Secure Voice)</strong> | Hotline Enclave: <strong>Ext. 404</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-primary" id="btn-close-help-footer">Saya Mengerti</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification Element -->
+<div class="toast-notice" id="toast-notice">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <span id="toast-text">Pengaturan berhasil disimpan!</span>
 </div>
 
 <script src="/app.js"></script>

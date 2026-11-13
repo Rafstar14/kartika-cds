@@ -1,100 +1,129 @@
-"""Skrip Pengujian Smoke Test & Live Verification untuk KARTIKA-CDS.
-Menguji unggahan file sah dan file serangan ke Low-Side, memeriksa verifikasi Gate,
-memeriksa transmisi UDP, memvalidasi Brankas High-Side, dan status Radar OT.
+"""Uji contoh unggahan dan penerimaan pada gateway yang sudah dijalankan.
+
+Perintah ini mengirim file ke gateway dan menambah isi karantina serta brankas.
+Jalankan hanya pada data demo. Kegagalan membaca file bukan bukti deteksi malware.
 """
-import sys
+import argparse
+import hashlib
 import time
-import requests
 from pathlib import Path
+
+import requests
+
 
 BASE = Path(__file__).resolve().parent.parent
 DEMO_FILES = BASE / "demo_files"
-LOW_URL = "http://127.0.0.1:5000"
-HIGH_URL = "http://127.0.0.1:5001"
 HEADERS = {"X-Diode-Request": "1"}
+HTTP_TIMEOUT = 5
+TRANSFER_TIMEOUT = 30
 
-def upload(filename):
-    path = DEMO_FILES / filename
-    with open(path, "rb") as f:
-        files = {"file": (filename, f)}
-        r = requests.post(f"{LOW_URL}/api/upload", files=files, headers=HEADERS)
-    return r.json()["job"]
+SCENARIOS = (
+    ("dokumen_operasi.pdf", "ACCEPTED", (), "Dokumen sah"),
+    ("firmware_radar_v24.bin", "ACCEPTED", (), "Firmware KRTK sah"),
+    ("radar_update_sah.cfg", "ACCEPTED", (), "Konfigurasi radar sah"),
+    ("laporan_palsu.pdf", "REJECTED", ("FORMAT_SPOOFING_DETECTED",), "Penyamaran format"),
+    ("pdf_aktif.pdf", "REJECTED", ("YARA_MATCH",), "Konten PDF aktif"),
+    ("sabotase_radar.cfg", "REJECTED", ("YARA_MATCH",), "Pola sabotase radar"),
+    ("gambar_polyglot.png", "REJECTED", ("STRUCTURE_INVALID",), "Polyglot PNG"),
+    ("data_terinfeksi.txt", "REJECTED", ("YARA_MATCH", "MALWARE_DETECTED"), "Sampel EICAR"),
+)
 
-def main():
-    print("=" * 65)
-    print(" KARTIKA-CDS: END-TO-END VERIFICATION & SMOKE TEST")
-    print("=" * 65)
 
-    # 1. Cek kesehatan endpoint
+def get_json(url):
+    response = requests.get(url, timeout=HTTP_TIMEOUT)
+    response.raise_for_status()
+    return response.json()
+
+
+def upload(low_url, filename):
+    content = (DEMO_FILES / filename).read_bytes()
+    response = requests.post(
+        f"{low_url}/api/upload",
+        files={"file": (filename, content)},
+        headers=HEADERS,
+        timeout=HTTP_TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()["job"], hashlib.sha256(content).hexdigest()
+
+
+def wait_for_receipt(low_url, high_url, job_id, expected_sha, timeout=TRANSFER_TIMEOUT):
+    """Cocokkan ID transfer baru dan hash, bukan hanya nama atau isi brankas lama."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        jobs = get_json(f"{low_url}/api/jobs")
+        job = next((item for item in jobs if item.get("id") == job_id), None)
+        if job is None:
+            raise ValueError("pekerjaan tidak ditemukan di sisi luar")
+        transfer = job.get("transfer", {})
+        if transfer.get("state") == "failed":
+            raise ValueError(f"pengiriman gagal: {transfer.get('error', 'alasan tidak tersedia')}")
+        file_id = transfer.get("file_id")
+        if file_id:
+            vault = get_json(f"{high_url}/api/vault")
+            received = next((item for item in vault if item.get("file_id") == file_id), None)
+            if received:
+                if received.get("sha256") != expected_sha:
+                    raise ValueError("hash brankas tidak sama dengan file yang diunggah")
+                return file_id
+        time.sleep(0.25)
+    raise TimeoutError("penerimaan di brankas belum terbukti dalam batas waktu")
+
+
+def run_scenario(low_url, high_url, scenario):
+    filename, expected, codes, _ = scenario
+    job, source_sha = upload(low_url, filename)
+    verdict = job.get("verdict")
+    code = job.get("code", "")
+    if verdict != expected:
+        raise ValueError(f"harapan {expected}, hasil {verdict} (kode {code or '-'})")
+    if codes and code not in codes:
+        raise ValueError(f"ditolak dengan kode {code or '-'}, bukan {', '.join(codes)}")
+    if verdict == "ACCEPTED":
+        if job.get("sha256") != source_sha:
+            raise ValueError("hash pemeriksaan tidak sama dengan file yang diunggah")
+        file_id = wait_for_receipt(low_url, high_url, job["id"], source_sha)
+        return f"diterima di brankas, ID {file_id}, SHA-256 cocok"
+    return f"ditolak oleh gate ({code})"
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--low-url", default="http://127.0.0.1:5000")
+    parser.add_argument("--high-url", default="http://127.0.0.1:5001")
+    args = parser.parse_args(argv)
+    low_url, high_url = args.low_url.rstrip("/"), args.high_url.rstrip("/")
+
+    print("KARTIKA-CDS: UJI DEMO LOKAL")
     try:
-        r_low = requests.get(f"{LOW_URL}/api/status")
-        r_high = requests.get(f"{HIGH_URL}/api/live")
-        assert r_low.status_code == 200 and r_high.status_code == 200
-        print("[+] Low-Side dan High-Side UI aktif dan merespons.")
-    except Exception as e:
-        print(f"[!] Gagal menghubungi server: {e}")
-        sys.exit(1)
+        status = get_json(f"{low_url}/api/status")
+        get_json(f"{high_url}/api/live")
+    except (requests.RequestException, ValueError) as exc:
+        print(f"[GAGAL] Endpoint tidak dapat diperiksa: {exc}")
+        return 1
 
-    tests = [
-        ("dokumen_operasi.pdf", "ACCEPTED", "Dokumen Perintah Operasi Sah"),
-        ("firmware_radar_v24.bin", "ACCEPTED", "Firmware KRTK Radar OT Sah"),
-        ("radar_update_sah.cfg", "ACCEPTED", "Parameter Frekuensi Radar Sah"),
-        ("laporan_palsu.pdf", "REJECTED", "Serangan Penyamaran PE Executable (.exe -> .pdf)"),
-        ("pdf_aktif.pdf", "REJECTED", "Serangan Eksploitasi PDF Aktif (JavaScript)"),
-        ("sabotase_radar.cfg", "REJECTED", "Upaya Sabotase Parameter Interlock Radar"),
-        ("gambar_polyglot.png", "REJECTED", "Serangan Penyusupan Biner Polyglot (Data sesudah IEND)"),
-        ("data_terinfeksi.txt", "REJECTED", "Uji Signature Malware Terinfeksi (EICAR)"),
-    ]
+    print(f"Engine aktif: YARA={status.get('yara')}, ClamAV={status.get('clamav')}; "
+          f"wajib={', '.join(status.get('required', [])) or '-'}")
+    if not status.get("ready"):
+        print("[PERINGATAN] Engine yang diwajibkan belum siap.")
 
     passed = 0
-    for filename, expected_verdict, label in tests:
+    for scenario in SCENARIOS:
+        filename, _, _, label = scenario
         try:
-            job = upload(filename)
-        except OSError as e:
-            print(f"[LULUS] {label}")
-            print(f"        File    : {filename}")
-            print(f"        Hasil   : REJECTED (Host AV: File otomatis dikarantina OS/Windows Defender!)")
+            detail = run_scenario(low_url, high_url, scenario)
+        except (OSError, requests.RequestException, ValueError, KeyError, TypeError) as exc:
+            print(f"[GAGAL] {label} ({filename}): {exc}")
+            if filename == "data_terinfeksi.txt" and isinstance(exc, OSError) and not isinstance(exc, requests.RequestException):
+                print("        File tidak terbaca; periksa karantina antivirus atau buat ulang sampel.")
+        else:
             passed += 1
-            time.sleep(0.5)
-            continue
+            print(f"[LULUS] {label} ({filename}): {detail}")
 
-        actual_verdict = job.get("verdict")
-        code = job.get("code", "")
-        reason = job.get("reason", "")
-        status = "[LULUS]" if actual_verdict == expected_verdict else "[GAGAL]"
-        if actual_verdict == expected_verdict:
-            passed += 1
-        print(f"{status} {label}")
-        print(f"        File    : {filename}")
-        print(f"        Hasil   : {actual_verdict} (Kode: {code or 'OK'})")
-        if reason:
-            print(f"        Alasan  : {reason[:80]}")
-        time.sleep(0.5)
+    print(f"Hasil: {passed}/{len(SCENARIOS)} skenario lulus.")
+    print("Uji lokal ini tidak membuktikan isolasi fisik atau kesiapan operasional.")
+    return 0 if passed == len(SCENARIOS) else 1
 
-    print("-" * 65)
-    print("Memeriksa status High-Side OT Enclave...")
-    time.sleep(2)
-
-    ot_data = requests.get(f"{HIGH_URL}/api/ot").json()
-    vault_data = requests.get(f"{HIGH_URL}/api/vault").json()
-
-    print(f"[+] Status Radar OT Terkini:")
-    print(f"    • Unit             : {ot_data.get('unit')}")
-    print(f"    • Versi Firmware   : {ot_data.get('firmware_version')}")
-    print(f"    • Frekuensi Sapuan : {ot_data.get('sweep_freq_mhz')} MHz")
-    print(f"    • Status Interlock : {ot_data.get('interlock_status')}")
-    print(f"    • File Pembaruan   : {ot_data.get('last_update_file')}")
-
-    print(f"\n[+] Total File Tersimpan di Brankas High-Side: {len(vault_data)} file")
-    for item in vault_data[:5]:
-        print(f"    - [{item.get('stored_as')}] {item.get('name')} ({item.get('size')} B) SHA256: {item.get('sha256')[:16]}... Pulih FEC: {item.get('recovered_by_fec')}")
-
-    print("-" * 65)
-    print(f"HASIL AKHIR: {passed}/{len(tests)} Pengujian Skenario Berhasil Sepenuhnya!")
-    if passed == len(tests) and ot_data.get("sweep_freq_mhz") == 2920:
-        print("[SUCCESS] Sistem KARTIKA-CDS 100% Siap Operasi & Siap Demo!")
-    else:
-        print("[WARNING] Sebagian pengujian memerlukan penyesuaian.")
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

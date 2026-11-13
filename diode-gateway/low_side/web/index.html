@@ -64,10 +64,9 @@
     </ul>
 
     <div class="sidebar-status-box">
-      <div class="status-beacon"></div>
       <div class="status-info-side">
         <div class="title">Status Gateway</div>
-        <div class="val" id="sb-status">Normal</div>
+        <div class="val" id="sb-status">Memeriksa status</div>
         <div class="time" id="sb-time">--:--:--</div>
       </div>
     </div>
@@ -80,14 +79,13 @@
       <div class="topbar-left">
         <div class="topbar-title-text">
           <h2>Gerbang Keamanan Satu Arah</h2>
-          <span class="topbar-subtitle">Melindungi Jaringan Radar Terisolasi</span>
+          <span class="topbar-subtitle">Prototipe pemeriksaan dan transfer berkas</span>
         </div>
       </div>
 
       <div class="topbar-right">
-        <div class="pill-badge normal" id="top-status-badge">
-          <span class="status-beacon"></span>
-          <span id="top-status-text">Normal (Siap)</span>
+        <div class="pill-badge" id="top-status-badge">
+          <span id="top-status-text">Memeriksa status</span>
         </div>
         <div class="pill-badge clock" id="top-clock">--:--:--</div>
         <div class="user-avatar" title="Operator Kartika">AS</div>
@@ -105,8 +103,8 @@
             </svg>
             KARTIKA-CDS • Inspect. Verify. Protect.
           </div>
-          <h1 class="hero-title">Gerbang Keamanan Satu Arah untuk Melindungi Jaringan Radar</h1>
-          <p class="hero-desc">Pastikan setiap berkas operasi, konfigurasi parameter radar, dan pembaruan firmware aman melalui 6 tahapan inspeksi militer sebelum dikirim ke sistem radar terisolasi.</p>
+          <h1 class="hero-title">Pemeriksaan berkas untuk simulasi radar OT</h1>
+          <p class="hero-desc">Periksa berkas sebelum dikirim melalui UDP tanpa ACK. Demo berjalan di komputer lokal; status radar di sisi dalam adalah simulasi.</p>
           <a href="#dropzone" class="btn-action-primary" id="btn-start-check">
             Mulai Pemeriksaan
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -137,7 +135,7 @@
               <line x1="8" y1="21" x2="16" y2="21"/>
               <line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
-            Ringkasan Sistem &amp; Status Radar
+            Ringkasan Pemeriksaan
           </h3>
           <a class="link-action" href="#riwayat">Lihat Detail &rarr;</a>
         </div>
@@ -154,8 +152,8 @@
                 <line x1="15" y1="20" x2="15" y2="23"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="metric-fw">v2.4.0</div>
-            <div class="stat-metric-label">Versi Firmware Radar</div>
+            <div class="stat-metric-val" id="metric-yara">Memuat</div>
+            <div class="stat-metric-label">Engine YARA</div>
           </div>
 
           <div class="stat-metric-card">
@@ -167,8 +165,8 @@
                 <path d="M12 14v7"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="metric-freq">2920 MHz</div>
-            <div class="stat-metric-label">Frekuensi Sapuan Radar</div>
+            <div class="stat-metric-val" id="metric-clamav">Memuat</div>
+            <div class="stat-metric-label">Engine ClamAV</div>
           </div>
 
           <div class="stat-metric-card">
@@ -178,8 +176,8 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="metric-lock" style="color:var(--accent-emerald-dark);">AKTIF</div>
-            <div class="stat-metric-label">Interlock Hardware Diode</div>
+            <div class="stat-metric-val" id="metric-gate">Memuat</div>
+            <div class="stat-metric-label">Kesiapan Gate</div>
           </div>
 
           <div class="stat-metric-card">
@@ -189,8 +187,8 @@
                 <polyline points="12 6 12 12 16 14"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="metric-processed">0</div>
-            <div class="stat-metric-label">Total File Diproses</div>
+            <div class="stat-metric-val" id="metric-processed">Memuat</div>
+            <div class="stat-metric-label">Catatan pemeriksaan terbaru</div>
           </div>
         </div>
       </section>
@@ -233,7 +231,7 @@
                 <line x1="12" y1="16" x2="12" y2="12"/>
                 <line x1="12" y1="8" x2="12.01" y2="8"/>
               </svg>
-              Berkas akan diverifikasi melalui 6 tahapan keamanan militer sebelum diteruskan.
+              Berkas diperiksa melalui tahapan gate; engine yang tidak wajib dapat dilewati.
             </div>
           </label>
           <div id="err" class="err-msg"></div>
@@ -248,31 +246,13 @@
 
             <div class="step-node" id="step-scan">
               <div class="step-icon-circle">2</div>
-              <div class="step-label">Scan</div>
-            </div>
-            <div class="step-arrow-divider"></div>
-
-            <div class="step-node" id="step-analisis">
-              <div class="step-icon-circle">3</div>
-              <div class="step-label">Analisis</div>
-            </div>
-            <div class="step-arrow-divider"></div>
-
-            <div class="step-node" id="step-validasi">
-              <div class="step-icon-circle">4</div>
-              <div class="step-label">Validasi</div>
-            </div>
-            <div class="step-arrow-divider"></div>
-
-            <div class="step-node" id="step-enkripsi">
-              <div class="step-icon-circle">5</div>
-              <div class="step-label">Enkripsi</div>
+              <div class="step-label">Pemeriksaan</div>
             </div>
             <div class="step-arrow-divider"></div>
 
             <div class="step-node" id="step-transfer">
-              <div class="step-icon-circle">6</div>
-              <div class="step-label">Transfer</div>
+              <div class="step-icon-circle">3</div>
+              <div class="step-label">Pengiriman</div>
             </div>
           </div>
         </div>
@@ -338,8 +318,8 @@
             <div class="verdict-banner" id="verdict-banner">
               <div class="verdict-icon">&#10003;</div>
               <div class="verdict-text">
-                <h4 id="verdict-title">Sistem Siap Menerima File</h4>
-                <p id="verdict-sub">Jalur Balik 0-Byte: Berkas lolos akan diteruskan ke Enklave Radar via UDP Simplex.</p>
+                <h4 id="verdict-title">Menunggu pemeriksaan</h4>
+                <p id="verdict-sub">Pilih berkas untuk melihat hasil gate.</p>
               </div>
             </div>
           </div>
@@ -359,7 +339,7 @@
             </svg>
             Log Terbaru &amp; Audit Trail
           </h3>
-          <span class="pill-badge normal" id="chain-badge">Rantai Hash Terverifikasi</span>
+          <span class="pill-badge" id="chain-badge">Memuat status audit</span>
         </div>
 
         <div class="table-panel-card">
@@ -400,8 +380,8 @@
           </svg>
         </div>
         <div>
-          <h3>Pengaturan Sistem KARTIKA-CDS</h3>
-          <span>Konfigurasi Jaringan &amp; Kebijakan Keamanan Pos Pemeriksaan</span>
+          <h3>Status dan Preferensi</h3>
+          <span>Status engine dari server dan preferensi suara browser</span>
         </div>
       </div>
       <button type="button" class="btn-close-modal" id="btn-close-settings">&times;</button>
@@ -409,66 +389,25 @@
 
     <div class="modal-body">
       <div>
-        <div class="modal-section-title">Konfigurasi Jaringan &amp; Port Diode</div>
+        <div class="modal-section-title">Kebijakan pemeriksaan</div>
         <div style="display:flex; flex-direction:column; gap:10px;">
           <div class="settings-card">
             <div class="settings-info">
-              <h4>Jalur Simplex UDP (One-Way Diode)</h4>
-              <p>Port pengiriman satu arah ke High-Side Enclave (127.0.0.1:5005)</p>
+              <h4>Pengaturan server</h4>
+              <p>Jaringan, FEC, dan engine wajib ditentukan saat server dijalankan. Panel ini tidak mengubah kebijakan server.</p>
             </div>
-            <label class="toggle-switch">
-              <input type="checkbox" checked id="set-udp-active">
-              <span class="slider-round"></span>
-            </label>
           </div>
-
           <div class="settings-card">
             <div class="settings-info">
-              <h4>Koreksi Kesalahan Reed-Solomon RS(4,2)</h4>
-              <p>Menjamin keutuhan paket data tanpa membutuhkan sinyal ACK balik</p>
+              <h4>YARA</h4>
+              <p id="settings-yara">Memuat status engine...</p>
             </div>
-            <label class="toggle-switch">
-              <input type="checkbox" checked id="set-fec-active">
-              <span class="slider-round"></span>
-            </label>
           </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="modal-section-title">Kebijakan Inspeksi Berkas (Security Policies)</div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
           <div class="settings-card">
             <div class="settings-info">
-              <h4>Pemeriksaan Ketat Magic Bytes</h4>
-              <p>Memverifikasi header &amp; footer biner asli untuk mencegah pemalsuan ekstensi</p>
+              <h4>ClamAV</h4>
+              <p id="settings-clamav">Memuat status engine...</p>
             </div>
-            <label class="toggle-switch">
-              <input type="checkbox" checked id="set-magic-check">
-              <span class="slider-round"></span>
-            </label>
-          </div>
-
-          <div class="settings-card">
-            <div class="settings-info">
-              <h4>Aturan YARA Intelijen Siber Radar</h4>
-              <p>Mendeteksi kode berbahaya dan anomali patch firmware militer</p>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" checked id="set-yara-check">
-              <span class="slider-round"></span>
-            </label>
-          </div>
-
-          <div class="settings-card">
-            <div class="settings-info">
-              <h4>Pemindaian Mendalam ClamAV Antivirus</h4>
-              <p>Mencocokkan tanda tangan database virus &amp; trojan terkini</p>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" checked id="set-clamav-check">
-              <span class="slider-round"></span>
-            </label>
           </div>
         </div>
       </div>
@@ -479,7 +418,7 @@
           <div class="settings-card">
             <div class="settings-info">
               <h4>Peringatan Suara (Audio Alert)</h4>
-              <p>Bunyi notifikasi saat berkas berhasil ditransfer atau ditolak</p>
+              <p>Bunyi saat hasil pemeriksaan diterima atau ditolak. Berlaku pada browser ini.</p>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" checked id="set-sound-alert">
@@ -491,8 +430,8 @@
     </div>
 
     <div class="modal-footer">
-      <button type="button" class="btn-secondary" id="btn-reset-settings">Standar TNI AD</button>
-      <button type="button" class="btn-primary" id="btn-save-settings">Simpan Pengaturan</button>
+      <button type="button" class="btn-secondary" id="btn-reset-settings">Suara bawaan</button>
+      <button type="button" class="btn-primary" id="btn-save-settings">Simpan preferensi</button>
     </div>
   </div>
 </div>
@@ -512,8 +451,8 @@
           </svg>
         </div>
         <div>
-          <h3>Bantuan &amp; Panduan Operasional</h3>
-          <span>SOP Pengiriman Berkas Gerbang Keamanan Satu Arah</span>
+          <h3>Bantuan &amp; Panduan Demo</h3>
+          <span>Alur pemeriksaan dan batas prototipe</span>
         </div>
       </div>
       <button type="button" class="btn-close-modal" id="btn-close-help">&times;</button>
@@ -521,13 +460,13 @@
 
     <div class="modal-body">
       <div>
-        <div class="modal-section-title">Alur Kerja Pengiriman Berkas (SOP)</div>
+        <div class="modal-section-title">Alur pemeriksaan dan pengiriman</div>
         <div style="display:flex; flex-direction:column; gap:10px;">
           <div class="help-step-box">
             <div class="help-step-num">1</div>
             <div class="help-step-content">
-              <h4>Siapkan Berkas Terverifikasi</h4>
-              <p>Pastikan berkas yang akan dikirim berupa patch firmware (.bin, .fw), konfigurasi radar (.json, .xml, .ini), atau berkas log resmi.</p>
+              <h4>Siapkan berkas contoh</h4>
+              <p>Format yang didukung: .pdf, .png, .jpg, .txt, .cfg, dan .bin; ukuran maksimal 10 MB pada konfigurasi bawaan.</p>
             </div>
           </div>
 
@@ -543,15 +482,15 @@
             <div class="help-step-num">3</div>
             <div class="help-step-content">
               <h4>Proses Inspeksi 6 Tahap Otomatis</h4>
-              <p>Sistem memverifikasi integritas nama, SHA-256, magic bytes biner, struktur data, aturan YARA, dan ClamAV.</p>
+              <p>Gate memeriksa nama, hash, format, struktur, YARA, dan ClamAV sesuai engine yang tersedia dan diwajibkan. Unggahan disimpan sementara di disk.</p>
             </div>
           </div>
 
           <div class="help-step-box">
             <div class="help-step-num">4</div>
             <div class="help-step-content">
-              <h4>Emisi Simplex Satu Arah ke Enklave Radar</h4>
-              <p>Berkas lolos dienkripsi ChaCha20-Poly1305 dan dipancarkan ke High-Side via UDP Simplex (0-byte feedback), dijamin tidak ada data yang bisa bocor keluar.</p>
+              <h4>Pengiriman dan penerimaan</h4>
+              <p>Paket diautentikasi dan dikirim lewat UDP tanpa ACK; isi berkas tidak dienkripsi. Periksa brankas sisi dalam untuk memastikan penerimaan.</p>
             </div>
           </div>
         </div>
@@ -562,27 +501,23 @@
         <div style="display:flex; flex-direction:column; gap:8px;">
           <div class="settings-card">
             <div class="settings-info">
-              <h4><span class="badge-status pass">LOLOS</span> Berkas Aman</h4>
-              <p>Semua tahapan lolos. Berkas tersimpan di Brankas Enklave Radar.</p>
+              <h4><span class="badge-status pass">LOLOS</span> Lolos gate</h4>
+              <p>Gate menerima berkas. Periksa status pengiriman dan brankas untuk melihat kelanjutannya.</p>
             </div>
           </div>
           <div class="settings-card">
             <div class="settings-info">
               <h4><span class="badge-status fail">DITOLAK</span> Berkas Dikarantina</h4>
-              <p>Terdeteksi ancaman atau format tidak standar. Berkas diisolasi dan dicatat di log audit.</p>
+              <p>Gate menolak berkas dan memindahkannya ke karantina. Alasan dicatat di audit.</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div>
-        <div class="modal-section-title">Kontak Dukungan Teknis Militer</div>
-        <div class="help-step-box">
-          <div class="help-step-num" style="background:var(--accent-emerald); color:#FFFFFF;">&#9742;</div>
-          <div class="help-step-content">
-            <h4>Pusat Komando Satuan Siber TNI AD</h4>
-            <p>Saluran Komunikasi Radio Sandi: <strong>CH-07 (Secure Voice)</strong> | Hotline Enclave: <strong>Ext. 404</strong></p>
-          </div>
+      <div class="help-step-box">
+        <div class="help-step-content">
+          <h4>Batas demo</h4>
+          <p>Mode lokal dan status radar simulasi tidak membuktikan isolasi fisik atau kesiapan operasional.</p>
         </div>
       </div>
     </div>

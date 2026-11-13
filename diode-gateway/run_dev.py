@@ -87,11 +87,11 @@ def main():
     p_demo = subprocess.Popen([PYTHON, "-m", "http.server", "8000", "--bind", "127.0.0.1", "--directory", "demo"], cwd=BASE)
     processes.append(p_demo)
 
-    print("\n[+] Seluruh komponen KARTIKA-CDS berhasil aktif:")
+    print("\n[*] Proses demo dijalankan. Periksa status layanan pada alamat berikut:")
     print("    • Sisi Luar (Low-Side Dropzone & Gate) : http://127.0.0.1:5000")
     print("    • Sisi Dalam (High-Side OT Radar Enclave): http://127.0.0.1:5001")
     print("    • Split-View Juri (Observer)            : http://127.0.0.1:8000/split.html")
-    print("    • UDP Simplex Gateway                   : 127.0.0.1:9999 (0 Byte Back-channel)")
+    print("    • UDP Gateway                           : 127.0.0.1:9999 (tanpa ACK; mode localhost)")
     print("\n[*] Sampel file demo siap digunakan di folder: diode-gateway/demo_files/")
     print("[*] Tekan Ctrl+C untuk menghentikan seluruh layanan.\n")
 

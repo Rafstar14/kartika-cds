@@ -7,6 +7,10 @@
   };
 
   const fmtSize = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : n >= 1024 ? (n / 1024).toFixed(1) + " KB" : n + " B");
+  const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[ch]);
+  const setText = (selector, text) => { const el = $(selector); if (el) el.textContent = text; };
 
   // Clock
   function updateClock() {
@@ -38,22 +42,23 @@
       if (statusBadge && statusText) {
         if (age < 8) {
           statusBadge.className = "pill-badge normal";
+          statusBadge.style.borderColor = "";
+          statusBadge.style.color = "";
           statusText.textContent = "Receiver Aktif (RX-Only)";
         } else {
           statusBadge.className = "pill-badge";
           statusBadge.style.borderColor = "var(--accent-amber)";
           statusBadge.style.color = "var(--accent-amber)";
-          statusText.textContent = "Receiver Menunggu Sinyal";
+          statusText.textContent = "Status receiver belum mutakhir";
         }
       }
 
       // OT Telemetry
-      if (d.ot_radar) {
-        if (d.ot_radar.firmware_version) $("#ot_fw").textContent = d.ot_radar.firmware_version;
-        if (d.ot_radar.sweep_freq_mhz) $("#ot_freq").textContent = `${d.ot_radar.sweep_freq_mhz} MHz`;
-        if (d.ot_radar.interlock_status) $("#ot_lock").textContent = d.ot_radar.interlock_status;
-        if (d.ot_radar.unit) $("#ot_unit").textContent = d.ot_radar.unit;
-      }
+      const ot = d.ot_radar || {};
+      setText("#ot_fw", ot.firmware_version || "Belum tersedia");
+      setText("#ot_freq", ot.sweep_freq_mhz ? `${ot.sweep_freq_mhz} MHz` : "Belum tersedia");
+      setText("#ot_lock", ot.interlock_status || "Belum tersedia");
+      setText("#ot_unit", ot.unit || "Status simulasi belum tersedia");
 
       // Stats counters
       const rxPacketsBadge = $("#rx-packets-badge");
@@ -69,21 +74,21 @@
       const activeBox = $("#active-transfers-box");
       if (activeBox) {
         if (!d.active || !d.active.length) {
-          activeBox.innerHTML = `<p class="empty-state">Tidak ada transfer masuk saat ini. Menunggu emisi UDP satu arah dari Guard Daemon...</p>`;
+          activeBox.innerHTML = `<p class="empty-state">Tidak ada transfer masuk saat ini.</p>`;
         } else {
           activeBox.innerHTML = d.active.map((t) => {
-            const pct = Math.round((100 * (t.received || 0)) / (t.total || 1));
+            const pct = Math.max(0, Math.min(100, Math.round((100 * (Number(t.received) || 0)) / (Number(t.total) || 1))));
             return `
               <div style="margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-weight:600;">
-                  <span>${t.name} (${fmtSize(t.size)})</span>
-                  <span style="color:var(--accent-emerald);">${pct}% (${t.received}/${t.total} paket)</span>
+                  <span>${escapeHTML(t.name)} (${escapeHTML(fmtSize(t.size))})</span>
+                  <span style="color:var(--accent-emerald);">${pct}% (${escapeHTML(t.received)}/${escapeHTML(t.total)} paket)</span>
                 </div>
                 <div class="transfer-progress-bar">
                   <div class="transfer-progress-fill" style="width:${pct}%;"></div>
                 </div>
                 <div style="font-size:12px; color:var(--text-dim); margin-top:6px;">
-                  Reed-Solomon RS(4,2) Pulih: <strong>${t.recovered || 0}</strong> paket | Duplikat diabaikan: ${t.dups || 0}
+                  Reed-Solomon RS(4,2) Pulih: <strong>${escapeHTML(t.recovered || 0)}</strong> paket | Duplikat diabaikan: ${escapeHTML(t.dups || 0)}
                 </div>
               </div>
             `;
@@ -91,7 +96,17 @@
         }
       }
     } catch (e) {
-      console.warn("Live status error:", e);
+      const badge = $("#top-status-badge");
+      if (badge) { badge.className = "pill-badge"; badge.style.color = ""; badge.style.borderColor = ""; }
+      setText("#top-status-text", "Status receiver tidak tersedia");
+      setText("#ot_fw", "Tidak tersedia");
+      setText("#ot_freq", "Tidak tersedia");
+      setText("#ot_lock", "Tidak tersedia");
+      setText("#ot_unit", "Status simulasi tidak tersedia");
+      setText("#rx-packets-badge", "Jumlah paket tidak tersedia");
+      setText("#stat-fec-recovered", "Tidak tersedia");
+      const activeBox = $("#active-transfers-box");
+      if (activeBox) activeBox.innerHTML = `<p class="empty-state">Transfer tidak dapat dimuat. Periksa koneksi ke server.</p>`;
     }
   }
 
@@ -121,22 +136,24 @@
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              ${f.name}
+              ${escapeHTML(f.name)}
             </td>
-            <td class="cell-time">${shortUuid}</td>
-            <td>${fmtSize(f.size)}</td>
-            <td class="cell-time" title="${f.sha256}">${shortSha}</td>
-            <td class="cell-time">${time}</td>
+            <td class="cell-time">${escapeHTML(shortUuid)}</td>
+            <td>${escapeHTML(fmtSize(f.size))}</td>
+            <td class="cell-time" title="${escapeHTML(f.sha256)}">${escapeHTML(shortSha)}</td>
+            <td class="cell-time">${escapeHTML(time)}</td>
             <td>
               <span class="badge-status ${isFec ? 'pass' : 'pass'}" style="${isFec ? 'border-color:var(--accent-amber);color:var(--accent-amber);' : ''}">
-                ${isFec ? `RS(4,2) Pulih (${f.recovered_by_fec})` : 'Penuh 100%'}
+                ${isFec ? `RS(4,2) Pulih (${escapeHTML(f.recovered_by_fec)})` : 'Tidak perlu pemulihan'}
               </span>
             </td>
           </tr>
         `;
       }).join("");
     } catch (e) {
-      console.warn("Vault refresh error:", e);
+      setText("#vault-count-badge", "Brankas tidak tersedia");
+      const tbody = $("#vault-table-body");
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Brankas tidak dapat dimuat. Periksa koneksi ke server.</td></tr>`;
     }
   }
 
@@ -147,6 +164,7 @@
       if (chainBadge) {
         if (a.chain && a.chain.ok) {
           chainBadge.className = "pill-badge normal";
+          chainBadge.style.color = "";
           chainBadge.textContent = `Rantai Hash Utuh (${a.chain.records || 0} Catatan)`;
         } else {
           chainBadge.className = "pill-badge fail";
@@ -169,15 +187,18 @@
         const code = r.code || r.event || "-";
         return `
           <tr>
-            <td class="cell-time">${time}</td>
-            <td style="font-weight:600; color:var(--accent-mint);">${r.event || "-"}</td>
-            <td>${label}</td>
-            <td class="cell-time">${code}</td>
+            <td class="cell-time">${escapeHTML(time)}</td>
+            <td style="font-weight:600; color:var(--accent-mint);">${escapeHTML(r.event || "-")}</td>
+            <td>${escapeHTML(label)}</td>
+            <td class="cell-time">${escapeHTML(code)}</td>
           </tr>
         `;
       }).join("");
     } catch (e) {
-      console.warn("Audit refresh error:", e);
+      const badge = $("#chain-badge-high");
+      if (badge) { badge.className = "pill-badge"; badge.style.color = ""; badge.textContent = "Status audit tidak tersedia"; }
+      const tbody = $("#audit-table-body");
+      if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Audit tidak dapat dimuat. Periksa koneksi ke server.</td></tr>`;
     }
   }
 

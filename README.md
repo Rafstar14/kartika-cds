@@ -6,13 +6,13 @@
 
 **Dirancang untuk Kartika Cyber Hackathon — TNI Angkatan Darat**
 
-*Transfer file satu arah tanpa jalur balik (0-byte back-channel) dari jaringan tidak tepercaya menuju jaringan Radar OT terisolasi, dengan pemeriksaan keamanan 6 tahap secara in-memory.*
+*Prototipe pemeriksaan dan transfer berkas dengan pengirim UDP tanpa ACK, untuk skenario jaringan radar OT. Demo bawaan berjalan di localhost dan status radarnya adalah simulasi.*
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](#)
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?logo=flask)](#)
 [![Ed25519](https://img.shields.io/badge/Crypto-Ed25519-green)](#)
 [![Reed Solomon](https://img.shields.io/badge/FEC-Reed--Solomon%20RS(4%2C2)-blue)](#)
-[![Tests](https://img.shields.io/badge/Tests-30%20Passed-brightgreen)](#pengujian)
+[![Tests](https://img.shields.io/badge/Tests-pytest-blue)](#pengujian--demo)
 
 </div>
 
@@ -36,72 +36,63 @@
 
 ## Tentang Proyek
 
-**KARTIKA-CDS (Cross-Domain Security)** adalah sistem gerbang keamanan satu arah (*data diode*) yang dirancang untuk skenario pertahanan siber TNI AD. Sistem ini memungkinkan pengiriman:
+**KARTIKA-CDS (Cross-Domain Security)** adalah prototipe gerbang pemeriksaan berkas dan transfer UDP yang dirancang untuk skenario pertahanan siber. Jenis berkas yang didukung:
 
 | Jenis File | Ekstensi | Keterangan |
 |---|---|---|
 | Dokumen perintah operasi | `.pdf` | Perintah dan laporan taktis |
 | Citra taktis | `.png`, `.jpg` | Peta situasi dan foto intelijen |
 | Konfigurasi parameter radar | `.cfg`, `.txt` | Frekuensi sapuan, interlock, dan parameter operasional |
-| Firmware perangkat OT/SCADA | `.bin` | Pembaruan biner bertanda tangan `KRTK` dengan CRC32 |
+| Firmware perangkat OT/SCADA | `.bin` | Contoh format biner dengan penanda `KRTK` dan CRC32, bukan tanda tangan kriptografis firmware |
 
-dari **jaringan luar yang tidak tepercaya (Low-Side)** menuju **jaringan dalam terisolasi (High-Side OT Radar Enclave)** secara satu arah, **tanpa jalur balik sama sekali (0-byte back-channel)**.
+Pengirim tidak menunggu ACK dari penerima. Mode demo menggunakan localhost sehingga tidak membuktikan pemisahan jaringan atau tidak adanya jalur balik pada tingkat sistem. Status radar merupakan simulasi yang disimpan dalam JSON, bukan perangkat radar yang terhubung.
+
+> **Batas keamanan:** ini prototipe, belum tersertifikasi atau dibuktikan siap operasi. Tanda tangan Ed25519 atau HMAC mengautentikasi paket dan mendeteksi perubahan; isi berkas tidak dienkripsi. Pemeriksaan berbasis aturan dan signature tidak menjamin semua malware terdeteksi.
 
 ---
 
 ## Arsitektur Sistem
 
 ```
- [ Browser Operator di Host (127.0.0.1:8000/split.html) ]
-         |                                                |
-   Baca UI Sisi Luar (:5000)                    Baca UI Sisi Dalam (:5001)
-         v                                                v
-+-------------------------+                   +--------------------------+
-| ZONA 1: Dropzone UI    |   Spool 1x ke    | ZONA 2: Security Guard   |
-| - low_side/app.py      |   buffer RAM      | - gate_inspector.py      |
-| - Tanpa kunci privat   | ←── lalu hapus ──→| - udp_sender.py          |
-| - Tanpa rute ke High   |   dari disk       | - Kunci Ed25519 Private  |
-+-------------------------+                   +------------+-------------+
-                                                           |
-                                      UDP 9999 Satu Arah (Ed25519 + RS(4,2) FEC)
-                                                           |
-     ═══════════════════════════════════════════════════════+═══════
-     HOST BRIDGE (br-diode) - nftables family bridge DROP semua arah balik L2
-     Static ARP │ IPv6 OFF │ Forwarding OFF │ Diverifikasi verify_oneway.sh
-     ═══════════════════════════════════════════════════════+═══════
-                                                           |
-                                                           v
-                                              +--------------------------+
-                                              | ZONA 3: High-Side OT    |
-                                              | - udp_receiver.py (RX)  |
-                                              | - Kunci Ed25519 Public  |
-                                              | - Brankas secure_vault/ |
-                                              | - Simulator Radar OT    |
-                                              +--------------------------+
+ Browser operator (localhost:8000/split.html)
+       |                                     |
+       v                                     v
+ Sisi luar (:5000)                    Sisi dalam (:5001, baca saja)
+ Unggah ke spool disk                 Brankas dan status radar simulasi
+       |                                     ^
+ Gate: nama, hash, format,                   |
+ struktur, YARA, ClamAV*                     |
+       |                                     |
+       +------ UDP tanpa ACK, RS(4,2) -------+
+               autentikasi Ed25519/HMAC
 ```
+
+\* Engine yang tidak diwajibkan dapat dilewati. Skrip Linux menyediakan topologi *network namespaces* dan aturan `nftables` untuk pengujian terpisah; hasilnya bergantung pada lingkungan dan harus diverifikasi dengan `scripts/verify_oneway.sh`.
 
 ---
 
 ## Fitur Keamanan
 
-### Pipeline Pemeriksaan 6 Tahap (Berjalan Murni di RAM)
+### Pipeline Pemeriksaan 6 Tahap
 
 | # | Tahap | Fungsi |
 |---|---|---|
 | 1 | **Nama & Ukuran** | Validasi ekstensi file yang diizinkan, batas maksimum 10 MB, sanitasi nama file terhadap path traversal (`../../`) |
-| 2 | **SHA-256** | Penghitungan hash integritas untuk pencatatan audit dan deteksi duplikasi |
+| 2 | **SHA-256** | Penghitungan hash untuk pencatatan audit dan pemeriksaan integritas saat transfer |
 | 3 | **Tanda Tangan File (Magic Bytes)** | Deteksi format spoofing: file `.exe` yang disamarkan sebagai `.pdf` akan tertolak |
 | 4 | **Pemeriksaan Struktur & Anti-Polyglot** | Validasi CRC tiap chunk PNG, deteksi sisipan data setelah `IEND`/`%%EOF`/`FFD9`, validasi header firmware `KRTK` + CRC32 |
 | 5 | **Aturan YARA** | Deteksi `/JavaScript`, `/Launch` dalam PDF, pola PowerShell, dan sabotase parameter OT/Modbus |
-| 6 | **ClamAV (INSTREAM)** | Pemindaian malware murni dari buffer RAM tanpa menyentuh disk |
+| 6 | **ClamAV (INSTREAM)** | Jika tersedia, file spool dibaca kembali lalu dikirim ke daemon `clamd`; dapat diwajibkan melalui konfigurasi |
+
+Unggahan disimpan sementara di disk. Gate membaca file ke memori untuk pemeriksaan hash, format, struktur, dan YARA; ClamAV membaca ulang file spool. File ditolak dipindah ke karantina. File diterima dibaca ulang oleh pengirim, hash-nya dibandingkan lagi sebelum dikirim, dan file sementara dihapus setelah upaya pengiriman selesai. Hal ini bukan inspeksi yang seluruhnya berlangsung di RAM.
 
 ### Fitur Keamanan Tambahan
 
-- **Ed25519 Kriptografi Asimetris**: Setiap paket UDP ditandatangani secara kriptografis
+- **Autentikasi paket**: Ed25519 bila pasangan kunci tersedia, atau HMAC-SHA256 sebagai fallback. Keduanya bukan enkripsi.
 - **Reed-Solomon RS(4,2) Forward Error Correction**: Mampu memulihkan kehilangan hingga 2 paket per grup (33% erasure) tanpa memerlukan ACK
-- **Anti-Replay & Anti-Downgrade**: Monotonic epoch timestamp dan jendela waktu anti-replay
+- **Pembatasan replay**: Penerima memeriksa jendela waktu dan `file_id` yang telah selesai. Perlindungan anti-downgrade firmware belum diimplementasikan.
 - **Tamper-Evident Hash Chain Audit Log**: Setiap catatan audit mengikat hash SHA-256 baris sebelumnya
-- **Anti-TOCTOU**: File dibaca 1x ke RAM lalu segera dihapus dari disk sebelum pemeriksaan
+- **Pemeriksaan ulang hash sebelum kirim**: Pengirim membandingkan hash file spool dengan hasil gate dan membatalkan pengiriman jika berbeda.
 
 ---
 
@@ -117,7 +108,7 @@ dari **jaringan luar yang tidak tepercaya (Low-Side)** menuju **jaringan dalam t
 
 | Komponen | Keterangan |
 |---|---|
-| **ClamAV + clamd** | Untuk tahap pemindaian malware (tahap ke-6). Tanpa ClamAV, sistem tetap berjalan dalam mode YARA-only |
+| **ClamAV + clamd** | Untuk tahap pemindaian malware. `run_dev.py` menggunakan mode YARA-only jika clamd tidak tersedia; bila ClamAV diwajibkan, file ditolak ketika daemon tidak tersedia. |
 | **libmagic** | Untuk pemeriksaan magic bytes tingkat lanjut. Tanpa ini, sistem menggunakan deteksi bawaan |
 
 ---
@@ -174,28 +165,21 @@ File demo akan tersimpan di folder `demo_files/` berisi:
 - File sah: `dokumen_operasi.pdf`, `radar_update_sah.cfg`, `firmware_radar_v24.bin`, `gambar_normal.png`
 - File serangan: `laporan_palsu.pdf` (exe tersembunyi), `pdf_aktif.pdf` (JavaScript), `sabotase_radar.cfg`, `gambar_polyglot.png`
 
+Skrip juga membuat sampel uji EICAR yang dapat dikarantina antivirus pada komputer. Jika sampel tidak dapat dibuat atau dibaca, smoke test akan melaporkannya sebagai gagal, bukan sebagai bukti bahwa gate mendeteksinya.
+
 ---
 
 ## Menjalankan Sistem
 
-### ⚡ Cara Tercepat: Perintah Instan `kartika`
+### Menjalankan demo lokal
 
-Setelah instalasi selesai, cukup ketik **satu perintah** di terminal dari folder mana saja:
+Dari folder `diode-gateway` dengan virtual environment aktif:
 
-**Windows (Command Prompt / PowerShell):**
-```cmd
-kartika
-```
-
-**Linux / macOS:**
 ```bash
-./kartika
+python cli.py
 ```
 
-**Atau jika sudah install via pip:**
-```bash
-kartika
-```
+Alternatif tanpa menu: `python run_dev.py`. Untuk menyediakan perintah `kartika` di virtual environment, jalankan `pip install -e .` dari folder `diode-gateway`, kemudian jalankan `kartika` saat environment tersebut aktif.
 
 Menu interaktif berikut akan langsung muncul di terminal:
 
@@ -232,12 +216,12 @@ Setelah memilih **Web UI**, browser Anda akan otomatis terbuka ke:
 |---|---|---|
 | **Split-View Observer** | http://127.0.0.1:8000/split.html | Tampilan berdampingan kedua sisi untuk demo / presentasi juri |
 | **Sisi Luar (Low-Side)** | http://127.0.0.1:5000 | Dashboard upload, dropzone, dan pemeriksaan 6 tahap |
-| **Sisi Dalam (High-Side)** | http://127.0.0.1:5001 | Brankas file terverifikasi, telemetri radar OT, dan audit log |
-| **UDP Simplex Gateway** | 127.0.0.1:9999 | Transfer data satu arah (0-byte back-channel) |
+| **Sisi Dalam (High-Side)** | http://127.0.0.1:5001 | Brankas file terverifikasi, status radar simulasi, dan audit log |
+| **UDP Gateway** | 127.0.0.1:9999 | Pengiriman UDP tanpa ACK pada komputer yang sama |
 
-### Mode Diode Penuh (Linux dengan Network Namespaces)
+### Mode Linux dengan Network Namespaces
 
-Untuk menjalankan dengan isolasi jaringan fisik sesungguhnya menggunakan Linux network namespaces dan nftables bridge firewall:
+Untuk menguji topologi virtual dengan Linux network namespaces dan nftables bridge firewall:
 
 ```bash
 sudo bash scripts/setup_netns.sh       # Buat topologi jaringan 3-zona
@@ -246,11 +230,13 @@ sudo bash scripts/run_netns.sh start   # Jalankan semua layanan di namespace mas
 python3 -m http.server 8000 --bind 127.0.0.1 --directory demo  # Split-view observer
 ```
 
+Ini adalah isolasi berbasis perangkat lunak, bukan diode fisik. Jalankan verifikasi di lingkungan target dan catat hasilnya; keberadaan skrip bukan bukti semua jalur balik telah tertutup. Skrip mengubah konfigurasi jaringan host dan membutuhkan hak administrator.
+
 ---
 
 ## Pengujian & Demo
 
-### Menjalankan Unit Test (30 Test Cases)
+### Menjalankan Unit Test
 
 ```bash
 python -m pytest
@@ -264,31 +250,33 @@ Pengujian mencakup:
 - Symlink & path traversal blocking
 - Polyglot file detection
 - YARA rule matching (active PDF, OT sabotage)
-- ClamAV detection
+- ClamAV detection dengan engine tiruan dalam tes, bukan daemon ClamAV nyata
 - Fail-closed gate behavior
 - Ed25519 & HMAC crypto roundtrip
 - Reed-Solomon RS(4,2) erasure recovery
 - Tamper-evident audit chain
 - High-side read-only enforcement
 
-### Menjalankan Demo End-to-End (8 Skenario Serangan)
+### Menjalankan Smoke Test (8 Skenario)
+
+Jalankan gateway lokal dan buat file demo terlebih dahulu. Smoke test mengunggah file dan menambahkan data ke karantina serta brankas, sehingga gunakan hanya lingkungan demo.
 
 ```bash
 python scripts/demo_smoke_test.py
 ```
 
-Skrip ini menjalankan 8 skenario pengujian otomatis:
+Skrip memeriksa keputusan gate dan kode alasan. Untuk file yang diterima, skrip juga menunggu ID transfer yang sama di brankas dan mencocokkan SHA-256. File yang tidak dapat dibaca, respons tidak sesuai, dan penerimaan yang tidak terbukti dihitung gagal; proses mengembalikan kode keluar bukan nol. Deteksi EICAR dapat terjadi pada YARA atau ClamAV, tergantung engine yang aktif dan urutan pemeriksaan.
 
 | # | Skenario | File | Hasil yang Diharapkan |
 |---|---|---|---|
 | 1 | Dokumen perintah operasi sah | `dokumen_operasi.pdf` | ACCEPTED |
 | 2 | Firmware radar OT sah | `firmware_radar_v24.bin` | ACCEPTED |
 | 3 | Parameter frekuensi radar sah | `radar_update_sah.cfg` | ACCEPTED |
-| 4 | Penyamaran executable | `laporan_palsu.pdf` | REJECTED: FORMAT_SPOOFING |
+| 4 | Penyamaran executable | `laporan_palsu.pdf` | REJECTED: FORMAT_SPOOFING_DETECTED |
 | 5 | Eksploitasi PDF aktif (JavaScript) | `pdf_aktif.pdf` | REJECTED: YARA_MATCH |
 | 6 | Sabotase parameter radar | `sabotase_radar.cfg` | REJECTED: YARA_MATCH |
 | 7 | Penyusupan polyglot PNG | `gambar_polyglot.png` | REJECTED: STRUCTURE_INVALID |
-| 8 | Signature malware (EICAR) | `data_terinfeksi.txt` | REJECTED: AV Detection |
+| 8 | Signature uji EICAR | `data_terinfeksi.txt` | REJECTED: YARA_MATCH atau MALWARE_DETECTED |
 
 ---
 
@@ -316,7 +304,7 @@ kartika-cds/
     │
     ├── low_side/                      # Zona 1-2: Sisi Luar (Dropzone + Security Gate)
     │   ├── app.py                     # Flask web server sisi luar (:5000)
-    │   ├── gate_inspector.py          # Pipeline pemeriksaan 6 tahap (in-memory)
+    │   ├── gate_inspector.py          # Pipeline pemeriksaan 6 tahap
     │   ├── guard_daemon.py            # Guard daemon proses inspeksi & penandatanganan
     │   ├── udp_sender.py              # Pengirim UDP satu arah + Reed-Solomon encoder
     │   ├── rules/
@@ -345,15 +333,16 @@ kartika-cds/
     │   ├── run_dev.sh                 # Runner Linux/macOS
     │   ├── loss_simulation.py         # Simulasi packet loss untuk uji FEC
     │   ├── setup_netns.sh             # Setup Linux network namespaces
-    │   ├── run_netns.sh               # Runner mode isolasi penuh
+    │   ├── run_netns.sh               # Runner topologi Linux virtual
     │   ├── verify_oneway.sh           # Verifikasi 7 titik isolasi satu arah
     │   └── teardown_netns.sh          # Bersihkan network namespaces
     │
-    └── tests/                         # Unit test suite (30 test cases)
+    └── tests/                         # Suite pengujian otomatis
         ├── test_app.py                # Pengujian web endpoint & CSRF
         ├── test_gate.py               # Pengujian pipeline inspeksi
         ├── test_protocol.py           # Pengujian kriptografi & Reed-Solomon
         ├── test_transfer.py           # Pengujian transfer end-to-end
+        ├── test_smoke.py              # Validasi pelaporan smoke test
         └── helpers.py                 # Utilitas pengujian
 ```
 
@@ -361,14 +350,13 @@ kartika-cds/
 
 ## Tampilan Antarmuka
 
-Antarmuka didesain dengan tema **Tactical Cyber / Military Tech Command Center** menggunakan palet warna *dark-mode emerald neon* khas militer:
+Antarmuka menyediakan panel sisi luar dan sisi dalam dengan tampilan berdampingan untuk demo lokal.
 
 **Fitur tampilan:**
 - Sidebar navigasi dengan indikator status sistem real-time
 - Hero card dengan animasi sapuan radar
-- Dashboard metrik: firmware, frekuensi sapuan, dan status interlock hardware diode
-- Visualisasi 6-tahap pemeriksaan keamanan secara real-time
-- Dropzone interaktif dengan stepper progress (Upload → Scan → Analisis → Validasi → Enkripsi → Transfer)
+- Dashboard status firmware, frekuensi, dan interlock simulasi
+- Visualisasi pemeriksaan dan hasil unggahan
 - Tabel log terbaru dengan badge status LOLOS / DITOLAK
 - Split-view untuk presentasi (sisi luar dan sisi dalam berdampingan)
 
@@ -378,6 +366,8 @@ Antarmuka didesain dengan tema **Tactical Cyber / Military Tech Command Center**
 
 - [Master Plan Arsitektur (Bahasa Indonesia)](MASTER_PLAN_KARTIKA_CDS.md)
 - [Product Requirements Document](PRD_KARTIKA_CDS_Unified_Hardened_Edition.md)
+
+Dokumen master plan dan PRD merupakan sasaran desain, bukan bukti bahwa semua rencana telah diimplementasikan atau diuji. Gunakan penjelasan status dan batas prototipe dalam README ini saat mendeskripsikan sistem.
 
 ---
 

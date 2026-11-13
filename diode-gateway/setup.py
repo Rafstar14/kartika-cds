@@ -12,6 +12,7 @@ setup(
         "cryptography>=41.0",
         "yara-python>=4.5",
         "pyclamd>=0.4.0",
+        "requests>=2.31",
         "pytest>=8.0",
     ],
     entry_points={

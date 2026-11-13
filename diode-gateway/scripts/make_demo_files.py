@@ -77,10 +77,20 @@ def main():
         "gambar_polyglot.png": png(extra=b"MZ" + bytes(120)),          # data disisipkan setelah IEND
         "skrip_uji.ps1": b"Write-Host 'uji ekstensi'\n",
     }
+    failed = []
     for name, data in files.items():
-        (OUT / name).write_bytes(data)
-        print(f"{name:26} {len(data):>7} byte")
+        try:
+            (OUT / name).write_bytes(data)
+        except OSError as exc:
+            failed.append(name)
+            print(f"[GAGAL] {name}: {exc}")
+        else:
+            print(f"{name:26} {len(data):>7} byte")
     print(f"\nTersimpan di {OUT}")
+    if failed:
+        print("Sebagian sampel tidak dapat dibuat. Periksa izin atau karantina antivirus: " + ", ".join(failed))
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

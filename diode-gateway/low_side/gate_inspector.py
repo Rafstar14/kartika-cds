@@ -1,12 +1,12 @@
-"""Security Gate Sisi Luar (Hardened Anti-TOCTOU & Anti-Symlink).
+"""Security Gate sisi luar.
 Urutan tahap (berhenti di kegagalan pertama):
 1 nama/ukuran & anti-symlink, 2 SHA-256 (In-Memory), 3 magic bytes,
 4 struktur/polyglot, 5 YARA, 6 ClamAV INSTREAM.
 
 Prinsip:
 - FAIL-CLOSED: Engine wajib yang mati = file ditolak, bukan dilewatkan.
-- IN-MEMORY SINGLE READ: File dibaca 1x saja ke buffer RAM (`raw_bytes`), sehingga
-  tidak ada celah TOCTOU (Time-of-Check to Time-of-Use) antara pemeriksaan dan pengiriman.
+- File spool dibaca ke RAM untuk hash, format, struktur, dan YARA.
+  ClamAV dan pengirim membaca kembali file spool; pengirim memeriksa ulang hash.
 """
 import hashlib
 import os
@@ -161,13 +161,13 @@ class Gate:
         if r.size > config.MAX_FILE_BYTES:
             return reject("intake", "SIZE_LIMIT", f"{r.size} byte melebihi batas {config.MAX_FILE_BYTES} byte")
 
-        # BACA 1X KE RAM (Anti-TOCTOU): Seluruh pemeriksaan selanjutnya memakai `raw`
+        # Buffer untuk hash, format, struktur, dan YARA.
         with open(path, "rb") as f:
             raw = f.read(config.MAX_FILE_BYTES + 1)
         if len(raw) != r.size:
             return reject("intake", "TOCTOU_DETECTED", "ukuran file berubah saat dibaca ke memori")
         r.raw_bytes = raw
-        mark("intake", "pass", f"{name}, {r.size} byte (dikunci di RAM)")
+        mark("intake", "pass", f"{name}, {r.size} byte (dibaca ke memori)")
 
         # 2. Hash SHA-256 dari buffer RAM
         r.sha256 = hashlib.sha256(raw).hexdigest()
@@ -218,8 +218,7 @@ class Gate:
         return r
 
     def inspect_and_extract(self, path, original_name) -> GateResult:
-        """Membaca file 1x ke RAM, langsung menghapus file fisik dari spool disk (Anti-TOCTOU),
-        lalu menjalankan seluruh 6 tahap pemeriksaan murni di buffer RAM."""
+        """Periksa file, lalu hapus file spool setelah pemeriksaan selesai."""
         path = Path(path)
         res = self.inspect(path, original_name)
         path.unlink(missing_ok=True)

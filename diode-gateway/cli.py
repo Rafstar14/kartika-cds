@@ -200,7 +200,10 @@ def handle_web_ui(interactive=True):
     if not is_gateway_running():
         print(f"    Menyalakan modul Sisi Luar (:5000), Sisi Dalam (:5001), dan Diode Receiver (:9999)...")
         start_gateway_background()
-    print(f"{GREEN}[✓] Gateway aktif dan siap melayani.{RESET}")
+    if not is_gateway_running():
+        print(f"{RED}[!] Port layanan belum siap. Periksa konfigurasi dan log gateway.{RESET}")
+        return
+    print(f"{GREEN}[✓] Port antarmuka merespons di localhost.{RESET}")
     url = "http://127.0.0.1:8000/split.html?mode=dev"
     print(f"{CYAN}[*] Membuka browser: {url}{RESET}")
     webbrowser.open(url)
@@ -239,22 +242,23 @@ def handle_terminal_ui(interactive=True):
                     audit_res = json.loads(resp.read().decode())
                     chain_ok = audit_res.get("chain", {}).get("ok", False)
             except Exception:
-                chain_ok = True
+                chain_ok = None
 
             os.system("cls" if sys.platform == "win32" else "clear")
             print(f"{ORANGE}================================================={RESET}")
             print(f" {BOLD_ORANGE}KARTIKA-CDS: Real-Time Tactical Monitor{RESET}")
             print(f"{ORANGE}================================================={RESET}")
-            print(f" Sisi Luar (Dropzone) : {GREEN}ONLINE (:5000){RESET}")
-            print(f" Sisi Dalam (OT Vault): {GREEN}ONLINE (:5001 - Read-Only){RESET}")
-            print(f" UDP Simplex Diode    : {GREEN}ONLINE (:9999 - 0 Byte Back-channel){RESET}")
-            print(f" Audit Hash Chain     : {GREEN}VERIFIED (Utuh){RESET}" if chain_ok else f" Audit Hash Chain: {RED}COMPROMISED{RESET}")
+            print(f" Sisi Luar (Dropzone) : {'Port 5000 terbuka' if is_port_listening(5000) else 'Tidak tersedia'}")
+            print(f" Sisi Dalam (OT Vault): {'Port 5001 terbuka' if is_port_listening(5001) else 'Tidak tersedia'}")
+            print(" UDP Gateway          : konfigurasi localhost:9999, tanpa ACK; status penerima belum diverifikasi")
+            audit_status = "UTUH" if chain_ok is True else "TERPUTUS" if chain_ok is False else "TIDAK TERSEDIA"
+            print(f" Audit Hash Chain     : {audit_status}")
             print(f"{ORANGE}-------------------------------------------------{RESET}")
-            print(f" {CYAN}STATUS RADAR ARHANUD TNI AD:{RESET}")
-            print(f"  • Unit              : {ot.get('unit', 'RADAR-ARHANUD-KARTIKA-01')}")
-            print(f"  • Versi Firmware    : {ot.get('firmware_version', 'v1.0.0-BASELINE')}")
-            print(f"  • Frekuensi Sapuan  : {ot.get('sweep_freq_mhz', 2850)} MHz")
-            print(f"  • Interlock Safety  : {ot.get('interlock_status', 'ACTIVE')}")
+            print(f" {CYAN}STATUS RADAR SIMULASI:{RESET}")
+            print(f"  • Unit              : {ot.get('unit', 'Tidak tersedia')}")
+            print(f"  • Versi Firmware    : {ot.get('firmware_version', 'Tidak tersedia')}")
+            print(f"  • Frekuensi Sapuan  : {ot.get('sweep_freq_mhz', 'Tidak tersedia')} MHz")
+            print(f"  • Interlock         : {ot.get('interlock_status', 'Tidak tersedia')}")
             print(f"  • Update Terakhir   : {ot.get('last_update_file', '-')}")
             print(f"{ORANGE}-------------------------------------------------{RESET}")
             print(f" {CYAN}BERKAS DI BRANKAS HIGH-SIDE ({len(vault)} berkas):{RESET}")

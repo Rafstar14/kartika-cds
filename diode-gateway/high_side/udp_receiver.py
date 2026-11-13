@@ -387,7 +387,7 @@ def serve(core: ReceiverCore, host, port):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1024 * 1024)
     s.bind((host, port))
     s.settimeout(0.5)
-    print(f"[receiver] mendengar UDP {host}:{port} (hanya menerima, 0 byte balik)", flush=True)
+    print(f"[receiver] mendengar UDP {host}:{port} (modul penerima tidak mengirim ACK)", flush=True)
     while True:
         try:
             data, _ = s.recvfrom(2048)

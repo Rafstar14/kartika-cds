@@ -38,7 +38,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
-          Telemetri OT
+          Status Radar Simulasi
         </a>
       </li>
       <li class="nav-item">
@@ -55,8 +55,8 @@
     <div class="sidebar-status-box">
       <div class="status-beacon"></div>
       <div class="status-info-side">
-        <div class="title">Mode Diode Receiver</div>
-        <div class="val" id="sb-status">RX-ONLY (0-BYTE TX)</div>
+        <div class="title">Penerima UDP</div>
+        <div class="val" id="sb-status">Tidak mengirim ACK</div>
         <div class="time" id="sb-time">--:--:--</div>
       </div>
     </div>
@@ -69,14 +69,13 @@
       <div class="topbar-left">
         <div class="topbar-title-text">
           <h2>Brankas &amp; Enklave Radar OT</h2>
-          <span class="topbar-subtitle">High-Side Isolated Enclave (Read-Only)</span>
+          <span class="topbar-subtitle">Sisi dalam baca saja, radar simulasi</span>
         </div>
       </div>
 
       <div class="topbar-right">
-        <div class="pill-badge normal" id="top-status-badge">
-          <span class="status-beacon"></span>
-          <span id="top-status-text">Receiver Aktif</span>
+        <div class="pill-badge" id="top-status-badge">
+          <span id="top-status-text">Memeriksa receiver</span>
         </div>
         <div class="pill-badge clock" id="top-clock">--:--:--</div>
         <div class="user-avatar" title="Pusat Komando Radar">HQ</div>
@@ -95,9 +94,9 @@
               <circle cx="12" cy="12" r="2"/>
               <path d="M12 14v7"/>
             </svg>
-            Status Perangkat Radar OT (TNI AD)
+            Status Radar OT (Simulasi)
           </h3>
-          <span class="vault-header-badge" id="ot_unit">RADAR-ARHANUD-KARTIKA-01</span>
+          <span class="vault-header-badge" id="ot_unit">Memuat status simulasi</span>
         </div>
 
         <div class="stats-cards-row">
@@ -112,7 +111,7 @@
                 <line x1="15" y1="20" x2="15" y2="23"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="ot_fw">v2.4.0</div>
+            <div class="stat-metric-val" id="ot_fw">Memuat</div>
             <div class="stat-metric-label">Versi Firmware Radar</div>
           </div>
 
@@ -123,7 +122,7 @@
                 <path d="M16.2 7.8l-2 6.3-6.4 2 2-6.3z"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="ot_freq">2920 MHz</div>
+            <div class="stat-metric-val" id="ot_freq">Memuat</div>
             <div class="stat-metric-label">Frekuensi Sapuan Radar</div>
           </div>
 
@@ -133,8 +132,8 @@
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="ot_lock" style="color:var(--accent-emerald-dark);">AKTIF</div>
-            <div class="stat-metric-label">Status Interlock Fisik</div>
+            <div class="stat-metric-val" id="ot_lock" style="color:var(--accent-emerald-dark);">Memuat</div>
+            <div class="stat-metric-label">Interlock Simulasi</div>
           </div>
 
           <div class="stat-metric-card">
@@ -143,8 +142,8 @@
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <div class="stat-metric-val" id="stat-fec-recovered">0</div>
-            <div class="stat-metric-label">Paket Dipulihkan FEC RS(4,2)</div>
+            <div class="stat-metric-val" id="stat-fec-recovered">Memuat</div>
+            <div class="stat-metric-label">Paket FEC pada transfer aktif</div>
           </div>
         </div>
       </section>
@@ -160,12 +159,12 @@
             </svg>
             Transfer Masuk &amp; Rekonstruksi Paket Reed-Solomon
           </h3>
-          <span class="pill-badge normal" id="rx-packets-badge">Total Paket: 0</span>
+          <span class="pill-badge" id="rx-packets-badge">Memuat jumlah paket</span>
         </div>
 
         <div class="table-panel-card" style="padding: 16px 20px;">
           <div id="active-transfers-box">
-            <p class="empty-state">Tidak ada transfer masuk saat ini. Menunggu emisi UDP satu arah dari Guard Daemon...</p>
+            <p class="empty-state">Memuat transfer masuk...</p>
           </div>
         </div>
       </section>
@@ -179,7 +178,7 @@
             </svg>
             File Terverifikasi di Brankas (Simpan Aman sebagai UUID)
           </h3>
-          <span class="pill-badge normal" id="vault-count-badge">0 Berkas Tersimpan</span>
+          <span class="pill-badge" id="vault-count-badge">Memuat brankas</span>
         </div>
 
         <div class="table-panel-card">
@@ -197,7 +196,7 @@
               </thead>
               <tbody id="vault-table-body">
                 <tr>
-                  <td colspan="6" class="empty-state">Brankas masih kosong.</td>
+                  <td colspan="6" class="empty-state">Memuat berkas di brankas...</td>
                 </tr>
               </tbody>
             </table>
@@ -215,7 +214,7 @@
             </svg>
             Catatan Audit High-Side (Tamper-Evident Hash Chain)
           </h3>
-          <span class="pill-badge normal" id="chain-badge-high">Rantai Hash Utuh</span>
+          <span class="pill-badge" id="chain-badge-high">Memuat status audit</span>
         </div>
 
         <div class="table-panel-card">

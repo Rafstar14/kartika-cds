@@ -71,11 +71,21 @@
 
   const btnCloseHelp = $("#btn-close-help");
   const btnCloseHelpFooter = $("#btn-close-help-footer");
+  const soundInput = $("#set-sound-alert");
+  let soundEnabled = true;
+  try {
+    const saved = localStorage.getItem("kartika_cds_sound");
+    if (saved !== null) soundEnabled = saved === "true";
+  } catch (e) {
+    // Browser storage can be unavailable; keep the default for this session.
+  }
+  if (soundInput) soundInput.checked = soundEnabled;
 
   // Open Settings Modal
   if (navPengaturan && modalSettings) {
     navPengaturan.addEventListener("click", (e) => {
       e.preventDefault();
+      if (soundInput) soundInput.checked = soundEnabled;
       modalSettings.classList.add("active");
     });
   }
@@ -83,36 +93,30 @@
   // Close Settings Modal
   function closeSettings() {
     if (modalSettings) modalSettings.classList.remove("active");
+    if (soundInput) soundInput.checked = soundEnabled;
   }
   if (btnCloseSettings) btnCloseSettings.addEventListener("click", closeSettings);
 
   // Save Settings
   if (btnSaveSettings) {
     btnSaveSettings.addEventListener("click", () => {
-      const cfg = {
-        udp: $("#set-udp-active")?.checked ?? true,
-        fec: $("#set-fec-active")?.checked ?? true,
-        magic: $("#set-magic-check")?.checked ?? true,
-        yara: $("#set-yara-check")?.checked ?? true,
-        clamav: $("#set-clamav-check")?.checked ?? true,
-        sound: $("#set-sound-alert")?.checked ?? true,
-      };
+      soundEnabled = soundInput ? soundInput.checked : true;
+      let stored = true;
       try {
-        localStorage.setItem("kartika_cds_cfg", JSON.stringify(cfg));
-      } catch (e) {}
-      showToast("Pengaturan KARTIKA-CDS berhasil disimpan!");
+        localStorage.setItem("kartika_cds_sound", String(soundEnabled));
+      } catch (e) {
+        stored = false;
+      }
+      showToast(stored ? "Preferensi suara disimpan di browser." : "Suara berlaku untuk sesi ini; browser tidak dapat menyimpannya.");
       closeSettings();
     });
   }
 
-  // Reset to TNI AD Defaults
+  // Reset the sound preference in the open dialog.
   if (btnResetSettings) {
     btnResetSettings.addEventListener("click", () => {
-      ["set-udp-active", "set-fec-active", "set-magic-check", "set-yara-check", "set-clamav-check", "set-sound-alert"].forEach(id => {
-        const el = $(`#${id}`);
-        if (el) el.checked = true;
-      });
-      showToast("Pengaturan dikembalikan ke Standar Militer TNI AD.");
+      if (soundInput) soundInput.checked = true;
+      showToast("Suara bawaan dipilih. Simpan untuk menerapkan.");
     });
   }
 
@@ -161,16 +165,16 @@
 
   // Stage mapping helper
   const stageKeyMap = {
-    "Nama dan ukuran": "stage-name-size",
-    "SHA-256": "stage-sha256",
-    "Tipe file (magic)": "stage-magic",
-    "Pemeriksaan struktur": "stage-structure",
-    "Aturan YARA": "stage-yara",
-    "ClamAV": "stage-clamav",
+    intake: "stage-name-size",
+    hash: "stage-sha256",
+    magic: "stage-magic",
+    structure: "stage-structure",
+    yara: "stage-yara",
+    clamav: "stage-clamav",
   };
 
   function updateStepper(stepIndex) {
-    const steps = ["step-upload", "step-scan", "step-analisis", "step-validasi", "step-enkripsi", "step-transfer"];
+    const steps = ["step-upload", "step-scan", "step-transfer"];
     steps.forEach((s, idx) => {
       const el = $(`#${s}`);
       if (!el) return;
@@ -183,7 +187,7 @@
     });
   }
 
-  function displayInspectionResult(job) {
+  function displayInspectionResult(job, announce = false) {
     const fnBadge = $("#inspection-filename");
     if (fnBadge) fnBadge.textContent = job.name || "Berkas Diperiksa";
 
@@ -202,33 +206,40 @@
 
     if (job.stages) {
       job.stages.forEach((s) => {
-        const id = stageKeyMap[s.label] || Object.keys(stageKeyMap).find(k => s.label.includes(k)) && stageKeyMap[Object.keys(stageKeyMap).find(k => s.label.includes(k))];
+        const id = stageKeyMap[s.id];
         if (id) {
           const item = $(`#${id}`);
           if (item) {
-            item.classList.add(s.status === "pass" ? "pass" : s.status === "fail" ? "fail" : "skip");
-            item.querySelector(".stage-status-text").textContent = s.status === "pass" ? "Lolos" : s.status === "fail" ? "Gagal" : "Dilewati";
+            if (["pass", "fail", "skip"].includes(s.status)) item.classList.add(s.status);
+            item.querySelector(".stage-status-text").textContent = ({ pass: "Lolos", fail: "Gagal", skip: "Dilewati", pending: "Belum diperiksa" })[s.status] || "Tidak diketahui";
           }
         }
       });
     }
 
-    const soundEnabled = $("#set-sound-alert") ? $("#set-sound-alert").checked : true;
-
     if (job.verdict === "ACCEPTED") {
       vBanner.className = "verdict-banner";
       vBanner.querySelector(".verdict-icon").innerHTML = "&#10003;";
-      vTitle.textContent = "File Aman & Lolos Verifikasi";
-      vSub.textContent = "Diteruskan ke Enklave Radar via UDP Simplex (Reed-Solomon RS(4,2) Protected).";
-      updateStepper(5); // Completed transfer
-      if (soundEnabled) playBeep(true);
+      vTitle.textContent = "Berkas lolos gate";
+      const transfer = job.transfer || {};
+      const messages = {
+        queued: "Menunggu antrean pengiriman.",
+        sending: "Sedang mengirim paket UDP.",
+        sent: "Paket dikirim tanpa ACK. Periksa brankas sisi dalam untuk memastikan penerimaan.",
+        failed: "Pengiriman gagal. Periksa log audit untuk rincian.",
+        none: "Status pengiriman belum tersedia.",
+      };
+      const state = transfer.state || "none";
+      vSub.textContent = (job.degraded ? "Sebagian engine tidak wajib dilewati. " : "") + (messages[state] || messages.none);
+      updateStepper(state === "sent" ? 3 : 2);
+      if (announce && soundEnabled) playBeep(true);
     } else {
       vBanner.className = "verdict-banner fail";
       vBanner.querySelector(".verdict-icon").innerHTML = "&times;";
       vTitle.textContent = "File Ditolak & Dikarantina";
       vSub.textContent = job.reason ? `Alasan: ${job.reason}` : "Pelanggaran keamanan terdeteksi. Berkas tidak dikirim.";
-      updateStepper(2); // Stop at inspection
-      if (soundEnabled) playBeep(false);
+      updateStepper(1);
+      if (announce && soundEnabled) playBeep(false);
     }
   }
 
@@ -237,9 +248,7 @@
     const errBox = $("#err");
     if (errBox) errBox.textContent = "";
 
-    // Show step upload
     updateStepper(0);
-    setTimeout(() => updateStepper(1), 300);
 
     const fd = new FormData();
     fd.append("file", file);
@@ -254,7 +263,7 @@
         throw new Error(body.error || "Server menolak berkas (kode " + r.status + ").");
       }
       if (body.job) {
-        displayInspectionResult(body.job);
+        displayInspectionResult(body.job, true);
       }
     } catch (e) {
       if (errBox) errBox.textContent = "Unggahan gagal: " + e.message;
@@ -282,93 +291,93 @@
     });
   }
 
-  // Render Log Table & Metrics
-  async function refreshData() {
-    try {
-      const [jobs, audit, status] = await Promise.all([
-        getJSON("/api/jobs").catch(() => []),
-        getJSON("/api/audit").catch(() => ({ records: [], chain: { ok: true } })),
-        getJSON("/api/status").catch(() => ({ ready: true }))
-      ]);
+  function setText(selector, value) {
+    const el = $(selector);
+    if (el) el.textContent = value;
+  }
 
-      // Metrics calculation
-      const totalProcessed = audit.records.filter(r => r.event.startsWith("GATE_")).length || jobs.length;
-      const countEl = $("#metric-processed");
-      if (countEl) countEl.textContent = String(totalProcessed);
+  function renderStatus(status) {
+    const engineText = (engine) => {
+      if (!status) return "Status tidak tersedia";
+      const required = (status.required || []).includes(engine);
+      return `${status[engine] ? "Aktif" : "Tidak aktif"} (${required ? "wajib" : "tidak wajib"})`;
+    };
+    setText("#settings-yara", engineText("yara"));
+    setText("#settings-clamav", engineText("clamav"));
+    setText("#metric-yara", status ? (status.yara ? "Aktif" : "Tidak aktif") : "Tidak tersedia");
+    setText("#metric-clamav", status ? (status.clamav ? "Aktif" : "Tidak aktif") : "Tidak tersedia");
+    const gateText = !status ? "Tidak tersedia" : !status.ready ? "Belum siap" : status.degraded ? "Terbatas" : "Siap";
+    setText("#metric-gate", gateText);
+    setText("#sb-status", gateText);
+    setText("#top-status-text", !status ? "Status tidak tersedia" : `Gate ${gateText.toLowerCase()}`);
+    const badge = $("#top-status-badge");
+    if (badge) badge.className = status && status.ready && !status.degraded ? "pill-badge normal" : "pill-badge";
+  }
 
-      // Latest job display in inspector if not set yet
-      if (jobs.length > 0 && !window.__lastJobIdSet) {
-        displayInspectionResult(jobs[0]);
-        window.__lastJobIdSet = true;
-      }
-
-      // Chain integrity badge
-      const chainBadge = $("#chain-badge");
+  function renderAudit(audit) {
+    const chainBadge = $("#chain-badge");
+    const tbody = $("#log-table-body");
+    if (!audit) {
+      setText("#metric-processed", "Tidak tersedia");
       if (chainBadge) {
-        if (audit.chain && audit.chain.ok) {
-          chainBadge.className = "pill-badge normal";
-          chainBadge.textContent = "Rantai Hash Terverifikasi (" + (audit.chain.records || 0) + ")";
-        } else {
-          chainBadge.className = "pill-badge fail";
-          chainBadge.style.color = "var(--accent-red)";
-          chainBadge.textContent = "Integritas Log Terputus!";
-        }
+        chainBadge.className = "pill-badge";
+        chainBadge.style.color = "";
+        chainBadge.textContent = "Status audit tidak tersedia";
       }
+      if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Log audit tidak dapat dimuat. Periksa koneksi ke server.</td></tr>`;
+      return;
+    }
 
-      // Populate Log Table
-      const tbody = $("#log-table-body");
-      if (tbody) {
-        if (!audit.records.length && !jobs.length) {
-          tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Belum ada file diperiksa. Serahkan file untuk memulai pengujian.</td></tr>`;
-          return;
-        }
-
-        const tableRows = [];
-        const seenEvents = audit.records.slice().reverse().slice(0, 15);
-
-        if (seenEvents.length > 0) {
-          seenEvents.forEach((r) => {
-            const time = (r.ts || "").slice(11, 19) || "--:--:--";
-            const name = r.name || (r.file_id ? `File [${r.file_id.slice(0, 8)}]` : "Unknown");
-            let isPass = false;
-            let statusText = "MEMPROSES";
-            let reasonText = "-";
-
-            if (r.event === "GATE_ACCEPTED" || r.event === "SENT_NO_ACK") {
-              isPass = true;
-              statusText = "LOLOS";
-              reasonText = r.event === "SENT_NO_ACK" ? `Terkirim (${r.packets} paket UDP)` : "Semua 6 tahap lolos";
-            } else if (r.event === "GATE_REJECTED" || r.event === "SEND_FAILED") {
-              isPass = false;
-              statusText = "DITOLAK";
-              reasonText = r.reason || r.code || "Pelanggaran aturan keamanan";
-            } else {
-              statusText = r.event;
-            }
-
-            tableRows.push(`
-              <tr>
-                <td class="cell-time">${time}</td>
-                <td class="cell-filename">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                  </svg>
-                  ${name}
-                </td>
-                <td>
-                  <span class="badge-status ${isPass ? 'pass' : 'fail'}">${statusText}</span>
-                </td>
-                <td class="cell-reason">${reasonText}</td>
-              </tr>
-            `);
-          });
-          tbody.innerHTML = tableRows.join("");
-        }
+    const records = audit.records || [];
+    setText("#metric-processed", String(records.filter(r => (r.event || "").startsWith("GATE_")).length));
+    if (chainBadge) {
+      const ok = audit.chain && audit.chain.ok;
+      chainBadge.className = ok ? "pill-badge normal" : "pill-badge fail";
+      chainBadge.style.color = ok ? "" : "var(--accent-red)";
+      chainBadge.textContent = ok ? `Rantai hash terverifikasi (${audit.chain.records || 0})` : "Integritas log terputus";
+    }
+    if (!tbody) return;
+    if (!records.length) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Belum ada catatan audit.</td></tr>`;
+      return;
+    }
+    tbody.replaceChildren();
+    records.slice(0, 15).forEach((record) => {
+      let label = record.event || "Peristiwa";
+      let detail = record.reason || record.code || "-";
+      if (record.event === "GATE_ACCEPTED") {
+        label = "LOLOS GATE";
+        detail = record.degraded ? "Ada engine tidak wajib yang dilewati" : "Pemeriksaan gate selesai";
+      } else if (record.event === "SENT_NO_ACK") {
+        label = "DIKIRIM";
+        detail = `${record.packets} paket dikirim tanpa ACK`;
+      } else if (record.event === "GATE_REJECTED") {
+        label = "DITOLAK";
+      } else if (record.event === "SEND_FAILED") {
+        label = "GAGAL KIRIM";
       }
+      const row = document.createElement("tr");
+      [(record.ts || "").slice(11, 19) || "--:--:--", record.name || (record.file_id ? `File [${record.file_id.slice(0, 8)}]` : "-"), label, detail].forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = String(value);
+        row.appendChild(cell);
+      });
+      tbody.appendChild(row);
+    });
+  }
 
-    } catch (e) {
-      console.warn("Telemetry refresh error:", e);
+  async function refreshData() {
+    const [jobsResult, auditResult, statusResult] = await Promise.allSettled([
+      getJSON("/api/jobs"), getJSON("/api/audit"), getJSON("/api/status")
+    ]);
+    renderStatus(statusResult.status === "fulfilled" ? statusResult.value : null);
+    renderAudit(auditResult.status === "fulfilled" ? auditResult.value : null);
+    if (jobsResult.status === "fulfilled") {
+      if (jobsResult.value.length) displayInspectionResult(jobsResult.value[0]);
+    } else {
+      setText("#inspection-filename", "Status pemeriksaan tidak tersedia");
+      setText("#verdict-title", "Status pemeriksaan tidak tersedia");
+      setText("#verdict-sub", "Periksa koneksi ke server sisi luar.");
     }
   }
 

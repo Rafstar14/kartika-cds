@@ -1,12 +1,14 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 
+> **Status dokumen:** PRD ini memuat sasaran dan kriteria desain, bukan bukti bahwa semua persyaratan telah terpenuhi. Demo saat ini menggunakan localhost, spool di disk, autentikasi paket tanpa enkripsi, dan radar simulasi. Isolasi Linux, ClamAV nyata, serta kesiapan operasional memerlukan pengujian pada lingkungan target. Lihat README utama untuk kondisi implementasi.
+
 | Metadata Dokumen | Detail Spesifikasi |
 | :--- | :--- |
 | **Nama Produk** | **KARTIKA-CDS** (*Cross-Domain Solution, Air-Gap Data Diode & Malware Inspection Gateway*) |
 | **Edisi Arsitektur** | Unified Hardened Edition (Integrasi Arsitektur 3-Zona + Otomasi `diode-gateway`) |
 | **Target Kompetisi** | Kartika Cyber Hackathon — TNI Angkatan Darat (TNI AD) |
 | **Domain Masalah** | Keamanan Siber Integrasi IT/OT & Pertahanan Infrastruktur Kritis Militer |
-| **Status Dokumen** | Final / Siap Eksekusi (*Ready for Deployment & Demo*) |
+| **Status Dokumen** | Rencana kebutuhan prototipe; sebagian persyaratan masih perlu dipenuhi atau diverifikasi |
 | **Tanggal Rilis** | 30 Oktober 2026 |
 
 ---
@@ -22,9 +24,7 @@ Instalasi militer strategis dan infrastruktur operasional (OT/ICS) milik TNI AD�
 Penggunaan media penyimpanan fisik (USB flashdisk) secara manual membuka celah infeksi *malware* bergaya *Stuxnet*, sedangkan pembukaan jalur jaringan dua arah standar (TCP/IP + Firewall biasa) membuka risiko jalur balik (*back-channel*) menuju server *Command & Control* (C2) penyerang jika salah satu sisi terkompromi.
 
 ### 1.2 Solusi yang Dihadirkan (Visi Produk)
-**KARTIKA-CDS** adalah sistem *Unidirectional Security Gateway* (Data Diode berbasis perangkat lunak yang diperkeras pada *Layer 2 Host Bridge*) yang dipadukan dengan *Multi-Stage In-Memory Malware Inspection Gate*. Sistem ini menjamin dua hal secara simultan:
-1. **Sanitasi Ketat Sebelum Transmisi (Zero Malware Ingress):** Setiap file dikunci di memori RAM (*anti-TOCTOU*) dan harus melewati 6 lapis pemeriksaan ketat sebelum diizinkan menyentuh antarmuka pengirim.
-2. **Jaminan Fisik/Logis Satu Arah (Zero Data Exfiltration):** Data dikirim melalui protokol UDP satu arah tanpa *acknowledgement* ($0\text{ byte}$ jalur balik), diamankan dengan tanda tangan asimetris **Ed25519 per paket**, dan dipulihkan dari kehilangan paket menggunakan matematika **Galois Field $GF(2^8)$ Reed-Solomon Erasure Coding $RS(4, 2)$**.
+**KARTIKA-CDS** adalah prototipe pemeriksaan berkas dan transfer UDP tanpa ACK. Gate menerapkan pemeriksaan bertahap sesuai engine yang diwajibkan, lalu penerima mengautentikasi paket dan memeriksa ulang berkas. Reed-Solomon $RS(4, 2)$ dapat memulihkan kehilangan tertentu. Sistem tidak menjamin seluruh malware terdeteksi atau seluruh jalur kebocoran tertutup; demo localhost bukan bukti isolasi fisik.
 
 ---
 
@@ -41,7 +41,7 @@ Penggunaan media penyimpanan fisik (USB flashdisk) secara manual membuka celah i
 ## 3. Ruang Lingkup Sistem (*Scope*)
 
 ### 3.1 Fitur di Dalam Ruang Lingkup (*In-Scope*)
-1. Pipeline inspeksi 6 tahap berbasis memori RAM (*In-Memory Single-Read*): Sanitasi Nama/Ukuran & Anti-Symlink, Hash SHA-256, Magic Bytes, Validasi Struktur Mendalam & Anti-Polyglot, Pemindaian YARA Taktis, dan Pemindaian Antivirus ClamAV (`INSTREAM`).
+1. Pipeline inspeksi 6 tahap: sanitasi nama/ukuran, SHA-256, magic bytes, struktur, YARA, dan ClamAV (`INSTREAM`) ketika tersedia atau diwajibkan. Unggahan tersimpan di spool disk dan beberapa komponen membacanya kembali.
 2. Protokol pengiriman UDP satu arah (*Simplex*) dengan tanda tangan kriptografi **Ed25519 (64-byte)** atau **HMAC-SHA256 (32-byte)** pada setiap datagram.
 3. Pengkodean dan pendekodean *Forward Error Correction* (FEC) sejati menggunakan **Reed-Solomon $RS(4, 2)$ di atas $GF(2^8)$** ditambah *multi-pass interleaving*.
 4. Isolasi topologi jaringan menggunakan Linux Network Namespaces (`diode-low`, `diode-high`) dan jembatan virtual (`br-diode`) dengan aturan pemutus jalur balik `nftables` *family bridge* di Host OS, ARP statis permanen, dan penonaktifan IPv6.
@@ -62,13 +62,13 @@ Penggunaan media penyimpanan fisik (USB flashdisk) secara manual membuka celah i
 | ID | Kebutuhan Fungsional | Kriteria Penerimaan (*Acceptance Criteria*) | Prioritas |
 | :--- | :--- | :--- | :--- |
 | **FR-01** | **Perlindungan CSRF & Penyimpanan Spool Acak** | Endpoint `POST /api/upload` wajib menolak permintaan tanpa header `X-Diode-Request: 1` (HTTP 403). File yang diunggah disimpan sementara menggunakan ID acak `<job_id>.upload` dengan izin `0600`, tidak pernah menggunakan nama file asli dari pengguna. | **P0 (Kritis)** |
-| **FR-02** | **Pemeriksaan Anti-Symlink & In-Memory Single Read (Anti-TOCTOU)** | Sebelum membaca isi file, sistem wajib memanggil `os.lstat()` dan menolak *symbolic link*, *named pipe* (FIFO), *device file*, atau *hardlink* (`st_nlink > 1`) dengan kode `UNSAFE_INODE`. Seluruh byte file dibaca **satu kali saja** ke dalam buffer RAM (`raw_bytes`), dan seluruh pemeriksaan tahap 2 hingga 6 dilakukan dari buffer tersebut. | **P0 (Kritis)** |
+| **FR-02** | **Pemeriksaan Anti-Symlink & Penanganan Spool** | Gate memeriksa `os.lstat()` dan menolak *symlink*, FIFO, perangkat, atau *hardlink*. Gate membaca spool ke RAM untuk hash, format, struktur, dan YARA; ClamAV serta pengirim membaca ulang spool. Pengirim membandingkan hash sebelum transfer. Pemeriksaan satu kali dan penghapusan sebelum pemeriksaan belum tercapai. | **P0 (Kritis)** |
 | **FR-03** | **Sanitasi Nama & Pembatasan Ukuran File (Tahap 1)** | Nama file dinormalisasi dengan NFKC, karakter berbahaya dihapus, dan ekstensi diperiksa terhadap daftar putih (`.pdf`, `.png`, `.jpg`, `.txt`, `.cfg`, `.bin`). File berukuran $0\text{ byte}$ (`EMPTY_FILE`) atau $> 10\text{ MB}$ (`SIZE_LIMIT`) langsung ditolak. | **P0 (Kritis)** |
 | **FR-04** | **Kalkulasi Integritas Awal SHA-256 (Tahap 2)** | Sistem menghitung nilai hash SHA-256 dari buffer RAM dan menyertakannya pada catatan pekerjaan, log audit, serta header protokol UDP. | **P0 (Kritis)** |
 | **FR-05** | **Deteksi Magic Bytes & Anti-Spoofing (Tahap 3)** | Sistem memeriksa byte awal buffer terhadap tanda tangan biner terlarang (`MZ` PE Windows, `\x7fELF` Linux, `#!` shebang, Mach-O, serta arsip `PK\x03\x04` ZIP/RAR/7z/GZIP). Jika ditemukan ketidaksesuaian dengan ekstensi, file ditolak dengan kode `FORMAT_SPOOFING_DETECTED`. | **P0 (Kritis)** |
 | **FR-06** | **Validasi Struktur Mendalam & Anti-Polyglot (Tahap 4)** | Sistem memvalidasi keutuhan struktur internal sesuai tipe file (`STRUCTURE_INVALID` jika gagal):<br>• **PNG:** Memverifikasi CRC32 setiap chunk dari `IHDR` hingga `IEND` dan menolak jika ada byte ekstra setelah `IEND`.<br>• **JPG:** Memastikan diakhiri dengan penanda EOI `\xff\xd9`.<br>• **PDF:** Memastikan keberadaan `%%EOF` di bagian akhir tanpa byte susulan.<br>• **TXT/CFG:** Memastikan teks UTF-8 murni tanpa byte `NUL` (`\x00`).<br>• **BIN (Firmware OT):** Memastikan header `KRTK`, kecocokan panjang payload, dan kecocokan nilai CRC32 internal 4-byte terakhir. | **P0 (Kritis)** |
 | **FR-07** | **Pemindaian Aturan YARA Taktis (Tahap 5)** | Sistem memindai buffer dengan aturan `low_side/rules/gateway.yar` untuk mendeteksi string uji EICAR, skrip aktif di dalam PDF (`/JavaScript`, `/JS`, `/Launch`, `/EmbeddedFiles`), perintah berbahaya (`powershell -enc`, `/dev/tcp/`), serta pola sabotase OT/Radar (`DISABLE_RADAR_INTERLOCK`, `MODBUS_FORCE_COIL_RESET`). | **P0 (Kritis)** |
-| **FR-08** | **Pemindaian Antivirus ClamAV Stream (Tahap 6)** | Sistem mengirim buffer RAM ke daemon `clamd` menggunakan protokol `INSTREAM` (tanpa kendala izin baca file disk). Jika terdeteksi virus, file ditolak dengan kode `MALWARE_DETECTED`. | **P0 (Kritis)** |
+| **FR-08** | **Pemindaian Antivirus ClamAV Stream (Tahap 6)** | Jika tersedia, sistem membaca ulang spool lalu mengirim byte ke daemon `clamd` menggunakan `INSTREAM`. Jika signature terdeteksi, file ditolak dengan kode `MALWARE_DETECTED`; engine yang tidak wajib dapat dilewati. | **P0 (Kritis)** |
 | **FR-09** | **Kebijakan Fail-Closed & Karantina Bukti** | Jika mesin pemindai yang diwajibkan (`DIODE_REQUIRE_ENGINES`) mati atau gagal dihubungi, sistem wajib menolak file (`ENGINE_UNAVAILABLE`). Setiap file yang ditolak dipindahkan ke folder `quarantine/<job_id>.quarantined` dengan izin `0400` beserta file metadata alasan penolakannya. | **P0 (Kritis)** |
 
 ---
@@ -102,7 +102,7 @@ Penggunaan media penyimpanan fisik (USB flashdisk) secara manual membuka celah i
 | Kategori | Spesifikasi Teknis & Standar Keamanan |
 | :--- | :--- |
 | **1. Penegakan Isolasi Jaringan (Layer 2 Host Enforcement)** | • Aturan blokir jalur balik wajib berada di **Host Bridge (`br-diode`)** menggunakan `nftables` (`table bridge diode`), bukan di dalam namespace penerima.<br>• Semua frame dari antarmuka `vh-br` menuju `vl-br` di-`drop` pada *Layer 2*.<br>• Tabel ARP dikunci secara statis (`nud permanent`), IPv6 dimatikan (`disable_ipv6=1`), dan IPv4 *forwarding* di jembatan dimatikan (`forwarding=0`). |
-| **2. Ketahanan terhadap Kehilangan Paket (*Packet Loss Resilience*)** | • Mampu memulihkan kehilangan **2 paket per grup (50% data loss lokal dalam satu grup)** hanya dalam 1 *pass*.<br>• Dengan konfigurasi bawaan $3\text{ pass}$, tingkat keberhasilan pengiriman file mencapai **100% pada kondisi kehilangan paket acak hingga 20%** tanpa jalur balik (dibuktikan melalui `scripts/loss_simulation.py`). |
+| **2. Ketahanan terhadap Kehilangan Paket (*Packet Loss Resilience*)** | • Kode dan tes memeriksa pemulihan hingga **2 chunk data per grup** jika paket paritas yang diperlukan tersedia.<br>• `scripts/loss_simulation.py` melakukan simulasi tertentu; hasil simulasi tidak menjamin tingkat keberhasilan di jaringan nyata. |
 | **3. Pembatasan Sumber Daya (Anti-DoS)** | • Ukuran datagram UDP dibatasi maksimal $1450\text{ byte}$ (bebas fragmentasi MTU).<br>• Maksimal sesi perakitan paralel di Receiver dibatasi `MAX_CONCURRENT = 4` sesi, dengan batas waktu aktif `TRANSFER_TIMEOUT_S = 180` detik dan batas diam `IDLE_TIMEOUT_S = 20` detik. |
 | **4. Integritas Log Audit (*Tamper-Evident Logging*)** | • Seluruh peristiwa di sisi luar (`audit_low.jsonl`) dan sisi dalam (`audit_high.jsonl`) menyertakan field `prev` berisi hash SHA-256 dari baris sebelumnya.<br>• Modifikasi 1 karakter pun pada riwayat log akan langsung terdeteksi oleh fungsi `verify_chain()` dan memunculkan peringatan merah di UI. |
 | **5. Pengerasan Web & Isolasi Bytecode** | • Header HTTP dilengkapi `Content-Security-Policy` ketat (`default-src 'none'; script-src 'self'`), `X-Content-Type-Options: nosniff`, dan `Cache-Control: no-store`.<br>• Seluruh skrip dijalankan dengan `PYTHONDONTWRITEBYTECODE=1` untuk mencegah serangan *cross-zone `__pycache__` poisoning*. |
@@ -159,7 +159,7 @@ Sistem dinyatakan siap didemonstrasikan di hadapan dewan juri apabila lulus selu
 
 ### 7.1 Suite Pengujian Unit & Integrasi Otomatis (`pytest`)
 * **`tests/test_protocol.py`:** Memvalidasi putaran penuh (*round-trip*) paket HMAC & Ed25519, memastikan kunci publik tidak dapat menandatangani paket, menolak manipulasi 1-bit pada datagram, dan membuktikan pemulihan matematis $RS(4, 2)$ untuk seluruh kombinasi $\binom{4}{2} = 6$ pasang *chunk* yang hilang.
-* **`tests/test_gate.py`:** Memvalidasi penerimaan 5 format file sah (`.pdf`, `.png`, `.txt`, `.cfg`, `.bin`), penolakan *spoofing* biner ELF/PE/Shebang, penolakan kerusakan CRC firmware, penolakan *symlink* di dropzone (`UNSAFE_INODE`), penolakan *polyglot* PNG, deteksi PDF ber-JavaScript & sabotase Radar OT oleh YARA, deteksi virus oleh ClamAV, serta perilaku *fail-closed* saat pemindai mati.
+* **`tests/test_gate.py`:** Memvalidasi penerimaan format contoh, sejumlah penolakan format dan struktur, pencocokan aturan YARA, serta perilaku fail-closed. Tes deteksi ClamAV memakai engine tiruan, bukan daemon ClamAV nyata.
 * **`tests/test_transfer.py`:** Memvalidasi pengiriman *end-to-end* dengan Ed25519 dan pembaruan status Radar OT, pemulihan kehilangan 2 paket per grup pada 1 *pass*, pembuangan paket palsu, pencegahan *path traversal* (`../../../../tmp/pwn.png`), revalidasi struktur di sisi dalam, deteksi manipulasi rantai hash log audit, serta kepastian bahwa modul Receiver tidak memiliki fungsi kirim.
 * **`tests/test_app.py`:** Memvalidasi penegakan header CSRF `X-Diode-Request`, karantina file yang ditolak tanpa pernah dikirim ke antrean UDP, pengiriman file yang diterima, dan sifat *read-only* pada seluruh endpoint Web UI Sisi Dalam.
 

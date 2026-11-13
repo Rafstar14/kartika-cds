@@ -45,9 +45,9 @@
 | Konfigurasi parameter radar | `.cfg`, `.txt` | Frekuensi sapuan, interlock, dan parameter operasional |
 | Firmware perangkat OT/SCADA | `.bin` | Contoh format biner dengan penanda `KRTK` dan CRC32, bukan tanda tangan kriptografis firmware |
 
-Pengirim tidak menunggu ACK dari penerima. Mode demo menggunakan localhost sehingga tidak membuktikan pemisahan jaringan atau tidak adanya jalur balik pada tingkat sistem. Status radar merupakan simulasi yang disimpan dalam JSON, bukan perangkat radar yang terhubung.
+Pengirim tidak menunggu ACK dari penerima. Mode demo menggunakan localhost sehingga tidak membuktikan pemisahan jaringan atau tidak adanya jalur balik pada tingkat sistem. Status radar merupakan simulasi/demo yang disimpan dalam JSON, bukan perangkat radar yang terhubung.
 
-> **Batas keamanan:** ini prototipe, belum tersertifikasi atau dibuktikan siap operasi. Tanda tangan Ed25519 atau HMAC mengautentikasi paket dan mendeteksi perubahan; isi berkas tidak dienkripsi. Pemeriksaan berbasis aturan dan signature tidak menjamin semua malware terdeteksi.
+> **NOTED:** prototipe ini belum tersertifikasi atau dibuktikan siap operasi. akan tetapi bisa terus dikembangkan sehingga siap untuk digunakan dalam keadaan rill. Tanda tangan Ed25519 atau HMAC mengautentikasi paket dan mendeteksi perubahan; isi berkas tidak dienkripsi.
 
 ---
 

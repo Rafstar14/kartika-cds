@@ -6,7 +6,7 @@
 
 **Dirancang untuk Kartika Cyber Hackathon — TNI Angkatan Darat**
 
-*Prototipe pemeriksaan dan transfer berkas dengan pengirim UDP tanpa ACK, untuk skenario jaringan radar OT. Demo bawaan berjalan di localhost dan status radarnya adalah simulasi.*
+*Prototipe pemeriksaan dan transfer berkas dengan pengirim UDP tanpa ACK, untuk skenario jaringan radar OT. Demo bawaan berjalan di localhost*
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](#)
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?logo=flask)](#)

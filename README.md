@@ -383,7 +383,7 @@ Antarmuka didesain dengan tema **Tactical Cyber / Military Tech Command Center**
 
 ## Lisensi
 
-Proyek ini dikembangkan untuk keperluan **Kartika Cyber Hackathon — TNI Angkatan Darat**.
+Proyek ini dikembangkan untuk perlombaan **Kartika Cyber Hackathon**.
 
 ---
 

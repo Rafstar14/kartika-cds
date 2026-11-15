@@ -57,6 +57,30 @@ REQUIRED_ENGINES = {
 }
 
 
+def _read_asym_key(path: Path) -> bytes:
+    raw = path.read_bytes()
+    if len(raw) == 32:
+        return raw
+
+    candidate = raw.lstrip(b"\xef\xbb\xbf").strip()
+    try:
+        decoded = bytes.fromhex(candidate.decode("ascii"))
+        if len(decoded) == 32:
+            return decoded
+    except (ValueError, UnicodeDecodeError):
+        pass
+
+    if len(raw) == 33 and (raw.endswith(b"\n") or raw.endswith(b"\r")):
+        return raw[:-1]
+    if len(raw) == 34 and raw.endswith((b"\r\n", b"\n\n")):
+        return raw[:-2]
+    if len(raw) == 35 and raw.startswith(b"\xef\xbb\xbf"):
+        return raw[3:]
+    if len(candidate) == 32:
+        return candidate
+    return candidate[:32]
+
+
 def load_key(mode: str = "auto") -> bytes:
     """Memuat kunci autentikasi paket.
     Jika pasangan kunci asimetris Ed25519 tersedia di keys/, gunakan Ed25519:
@@ -65,14 +89,10 @@ def load_key(mode: str = "auto") -> bytes:
     Jika tidak ada, fallback ke kunci simetris diode.key (minimal 32 byte).
     """
     if mode == "sign" and PRIV_KEY_FILE.exists():
-        raw = PRIV_KEY_FILE.read_bytes().strip()
-        if len(raw) == 64:
-            raw = bytes.fromhex(raw.decode("ascii"))
+        raw = _read_asym_key(PRIV_KEY_FILE)
         return b"ED25519_PRIV:" + raw[:32]
     if mode == "verify" and PUB_KEY_FILE.exists():
-        raw = PUB_KEY_FILE.read_bytes().strip()
-        if len(raw) == 64:
-            raw = bytes.fromhex(raw.decode("ascii"))
+        raw = _read_asym_key(PUB_KEY_FILE)
         return b"ED25519_PUB:" + raw[:32]
     try:
         key = KEY_FILE.read_bytes()
